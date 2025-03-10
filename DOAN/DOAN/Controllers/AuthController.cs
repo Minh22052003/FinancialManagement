@@ -9,8 +9,8 @@ namespace DOAN.Controllers
     public class AuthController : Controller
     {
         //lay thong tin tu database
-        private readonly DatabaseConnection _context;
-        public AuthController(DatabaseConnection context)
+        private readonly HeThongTaiChinhDbContext _context;
+        public AuthController(HeThongTaiChinhDbContext context)
         {
             _context = context;
         }

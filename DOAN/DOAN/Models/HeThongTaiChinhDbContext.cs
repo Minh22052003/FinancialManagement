@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DOAN.Models;
 
-public partial class DatabaseConnection : DbContext
+public partial class HeThongTaiChinhDbContext : DbContext
 {
-    public DatabaseConnection()
+    public HeThongTaiChinhDbContext()
     {
     }
 
-    public DatabaseConnection(DbContextOptions<DatabaseConnection> options)
+    public HeThongTaiChinhDbContext(DbContextOptions<HeThongTaiChinhDbContext> options)
         : base(options)
     {
     }
@@ -39,7 +39,7 @@ public partial class DatabaseConnection : DbContext
     {
         modelBuilder.Entity<ApprovalHistory>(entity =>
         {
-            entity.HasKey(e => e.ApprovalId).HasName("PK__Approval__C94AE61A1573F1C5");
+            entity.HasKey(e => e.ApprovalId).HasName("PK__Approval__C94AE61A6CD7A8EF");
 
             entity.ToTable("ApprovalHistory");
 
@@ -70,7 +70,7 @@ public partial class DatabaseConnection : DbContext
 
         modelBuilder.Entity<Customer>(entity =>
         {
-            entity.HasKey(e => e.CustomerId).HasName("PK__Customer__CD65CB85D3FF96E0");
+            entity.HasKey(e => e.CustomerId).HasName("PK__Customer__CD65CB855B3E111E");
 
             entity.Property(e => e.CustomerId).HasColumnName("customer_id");
             entity.Property(e => e.Address)
@@ -96,9 +96,9 @@ public partial class DatabaseConnection : DbContext
 
         modelBuilder.Entity<DepositAccount>(entity =>
         {
-            entity.HasKey(e => e.AccountId).HasName("PK__DepositA__46A222CDBE9B4DD3");
+            entity.HasKey(e => e.AccountId).HasName("PK__DepositA__46A222CDA811CF27");
 
-            entity.HasIndex(e => e.AccountNumber, "UQ__DepositA__AF91A6ADEC7BE6FB").IsUnique();
+            entity.HasIndex(e => e.AccountNumber, "UQ__DepositA__AF91A6AD9B1AFD42").IsUnique();
 
             entity.Property(e => e.AccountId).HasColumnName("account_id");
             entity.Property(e => e.AccountNumber)
@@ -110,7 +110,6 @@ public partial class DatabaseConnection : DbContext
                 .IsUnicode(false)
                 .HasColumnName("account_type");
             entity.Property(e => e.Balance)
-                .HasDefaultValue(0m)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("balance");
             entity.Property(e => e.CreatedAt)
@@ -121,6 +120,13 @@ public partial class DatabaseConnection : DbContext
             entity.Property(e => e.InterestRate)
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("interest_rate");
+            entity.Property(e => e.MaturityDate).HasColumnName("maturity_date");
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasDefaultValue("active")
+                .HasColumnName("status");
+            entity.Property(e => e.Term).HasColumnName("term");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.DepositAccounts)
                 .HasForeignKey(d => d.CustomerId)
@@ -130,21 +136,26 @@ public partial class DatabaseConnection : DbContext
 
         modelBuilder.Entity<FinancialTransaction>(entity =>
         {
-            entity.HasKey(e => e.TransactionId).HasName("PK__Financia__85C600AFA12421A9");
+            entity.HasKey(e => e.TransactionId).HasName("PK__Financia__85C600AF1DC1FCBC");
 
             entity.Property(e => e.TransactionId).HasColumnName("transaction_id");
             entity.Property(e => e.Amount)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("amount");
             entity.Property(e => e.DepositAccountId).HasColumnName("deposit_account_id");
-            entity.Property(e => e.Description)
-                .HasMaxLength(255)
-                .HasColumnName("description");
-            entity.Property(e => e.LoanId).HasColumnName("loan_id");
+            entity.Property(e => e.EmployeeId).HasColumnName("employee_id");
             entity.Property(e => e.TransactionDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("transaction_date");
+            entity.Property(e => e.TransactionMethod)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("transaction_method");
+            entity.Property(e => e.TransactionStatus)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("transaction_status");
             entity.Property(e => e.TransactionType)
                 .HasMaxLength(50)
                 .IsUnicode(false)
@@ -152,16 +163,18 @@ public partial class DatabaseConnection : DbContext
 
             entity.HasOne(d => d.DepositAccount).WithMany(p => p.FinancialTransactions)
                 .HasForeignKey(d => d.DepositAccountId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_FinancialTransactions_DepositAccounts");
 
-            entity.HasOne(d => d.Loan).WithMany(p => p.FinancialTransactions)
-                .HasForeignKey(d => d.LoanId)
-                .HasConstraintName("FK_FinancialTransactions_LoanAccounts");
+            entity.HasOne(d => d.Employee).WithMany(p => p.FinancialTransactions)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_FinancialTransactions_Users");
         });
 
         modelBuilder.Entity<LoanAccount>(entity =>
         {
-            entity.HasKey(e => e.LoanId).HasName("PK__LoanAcco__A1F795541E2C528B");
+            entity.HasKey(e => e.LoanId).HasName("PK__LoanAcco__A1F79554931E54B6");
 
             entity.Property(e => e.LoanId).HasColumnName("loan_id");
             entity.Property(e => e.ApprovedAmount)
@@ -201,7 +214,7 @@ public partial class DatabaseConnection : DbContext
 
         modelBuilder.Entity<LoanDocument>(entity =>
         {
-            entity.HasKey(e => e.DocumentId).HasName("PK__LoanDocu__9666E8AC84157B3D");
+            entity.HasKey(e => e.DocumentId).HasName("PK__LoanDocu__9666E8ACC686165C");
 
             entity.Property(e => e.DocumentId).HasColumnName("document_id");
             entity.Property(e => e.DocumentDetails)
@@ -221,7 +234,7 @@ public partial class DatabaseConnection : DbContext
 
         modelBuilder.Entity<PaymentHistory>(entity =>
         {
-            entity.HasKey(e => e.PaymentId).HasName("PK__PaymentH__ED1FC9EA5F4BADD0");
+            entity.HasKey(e => e.PaymentId).HasName("PK__PaymentH__ED1FC9EA9C782C08");
 
             entity.ToTable("PaymentHistory");
 
@@ -247,9 +260,9 @@ public partial class DatabaseConnection : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__B9BE370FAF43911A");
+            entity.HasKey(e => e.UserId).HasName("PK__Users__B9BE370F686FF2D2");
 
-            entity.HasIndex(e => e.Username, "UQ__Users__F3DBC57217809719").IsUnique();
+            entity.HasIndex(e => e.Username, "UQ__Users__F3DBC5721F47C99B").IsUnique();
 
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.CreatedAt)

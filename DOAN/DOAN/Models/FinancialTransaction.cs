@@ -7,19 +7,21 @@ public partial class FinancialTransaction
 {
     public int TransactionId { get; set; }
 
+    public int DepositAccountId { get; set; }
+
     public string TransactionType { get; set; } = null!;
-
-    public int? DepositAccountId { get; set; }
-
-    public int? LoanId { get; set; }
 
     public decimal Amount { get; set; }
 
-    public DateTime? TransactionDate { get; set; }
+    public DateTime TransactionDate { get; set; }
 
-    public string? Description { get; set; }
+    public int EmployeeId { get; set; }
 
-    public virtual DepositAccount? DepositAccount { get; set; }
+    public string TransactionMethod { get; set; } = null!;
 
-    public virtual LoanAccount? Loan { get; set; }
+    public string TransactionStatus { get; set; } = null!;
+
+    public virtual DepositAccount DepositAccount { get; set; } = null!;
+
+    public virtual User Employee { get; set; } = null!;
 }

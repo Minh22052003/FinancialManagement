@@ -13,11 +13,17 @@ public partial class DepositAccount
 
     public string AccountType { get; set; } = null!;
 
-    public decimal? Balance { get; set; }
+    public decimal Balance { get; set; }
+
+    public int? Term { get; set; }
 
     public decimal? InterestRate { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    public DateOnly? MaturityDate { get; set; }
+
+    public string Status { get; set; } = null!;
 
     public virtual Customer Customer { get; set; } = null!;
 

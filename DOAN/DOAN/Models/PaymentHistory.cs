@@ -11,7 +11,7 @@ public partial class PaymentHistory
 
     public decimal PaymentAmount { get; set; }
 
-    public DateTime? PaymentDate { get; set; }
+    public DateTime PaymentDate { get; set; }
 
     public string? PaymentStatus { get; set; }
 

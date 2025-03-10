@@ -21,13 +21,11 @@ public partial class LoanAccount
 
     public string PaymentMethod { get; set; } = null!;
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public DateOnly? DueDate { get; set; }
 
     public virtual Customer Customer { get; set; } = null!;
-
-    public virtual ICollection<FinancialTransaction> FinancialTransactions { get; set; } = new List<FinancialTransaction>();
 
     public virtual DepositAccount? LinkedDepositAccount { get; set; }
 

@@ -13,7 +13,7 @@ public partial class ApprovalHistory
 
     public int ApprovedBy { get; set; }
 
-    public DateTime? ApprovalDate { get; set; }
+    public DateTime ApprovalDate { get; set; }
 
     public string ApprovalStatus { get; set; } = null!;
 

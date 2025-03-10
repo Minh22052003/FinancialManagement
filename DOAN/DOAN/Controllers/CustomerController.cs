@@ -7,34 +7,45 @@ namespace DOAN.Controllers
     public class CustomerController : Controller
     {
 
-        private readonly DatabaseConnection _context;
+        private readonly HeThongTaiChinhDbContext _context;
 
-        public CustomerController(DatabaseConnection context)
+        public CustomerController(HeThongTaiChinhDbContext context)
         {
             _context = context;
         }
 
         //get danh sach khach hang va chuyen thanh customerdto
         [HttpGet]
-        public IActionResult Index()
+        public IActionResult Index(string? search)
         {
-            var customers = _context.Customers;
-            var customerDtos = new List<Customer_DTO>();
-            foreach (var customer in customers)
+            var query = _context.Customers.AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
             {
-                customerDtos.Add(new Customer_DTO
+                if (int.TryParse(search, out int id))
                 {
-                    CustomerId = customer.CustomerId,
-                    FullName = customer.FullName,
-                    DateOfBirth = customer.DateOfBirth,
-                    Address = customer.Address,
-                    Phone = customer.Phone,
-                    Email = customer.Email,
-                    IdentityNumber = customer.IdentityNumber
-                });
+                    query = query.Where(c => c.CustomerId == id);
+                }
+                else
+                {
+                    query = query.Where(c => c.FullName.Contains(search));
+                }
             }
+
+            var customerDtos = query.Select(customer => new Customer_DTO
+            {
+                CustomerId = customer.CustomerId,
+                FullName = customer.FullName,
+                DateOfBirth = customer.DateOfBirth,
+                Address = customer.Address,
+                Phone = customer.Phone,
+                Email = customer.Email,
+                IdentityNumber = customer.IdentityNumber
+            }).ToList();
+
             return Ok(customerDtos);
         }
+
 
 
         //httppost de them khach hang dua tren customerdto va tra ve view danh sach khach hang

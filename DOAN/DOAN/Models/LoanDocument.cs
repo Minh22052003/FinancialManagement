@@ -11,7 +11,7 @@ public partial class LoanDocument
 
     public string? DocumentDetails { get; set; }
 
-    public DateTime? SubmittedDate { get; set; }
+    public DateTime SubmittedDate { get; set; }
 
     public virtual LoanAccount Loan { get; set; } = null!;
 }
