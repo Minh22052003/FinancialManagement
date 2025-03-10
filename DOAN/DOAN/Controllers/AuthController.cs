@@ -22,7 +22,7 @@ namespace DOAN.Controllers
 
         // POST: /Account/Login
         [HttpPost]
-        public IActionResult Login(Account account)
+        public IActionResult Login(Account_DTO account)
         {
             if (ModelState.IsValid)
             {
