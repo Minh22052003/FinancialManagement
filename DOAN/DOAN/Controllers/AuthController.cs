@@ -45,7 +45,7 @@ namespace DOAN.Controllers
             // Xóa toàn bộ dữ liệu session
             HttpContext.Session.Clear();
             // Chuyển hướng về trang đăng nhập
-            return RedirectToAction("Login", "Account");
+            return RedirectToAction("Login", "Auth");
         }
     }
 }
