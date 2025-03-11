@@ -1,0 +1,49 @@
+﻿@model IEnumerable<DOAN.DTOs.Customer_DTO>
+
+@{
+    ViewData["Title"] = "Tìm kiếm khách hàng";
+}
+
+<h2>Tìm kiếm khách hàng</h2>
+
+<form method="get">
+    <div class="form-group">
+        <label for="searchKeyword">Nhập thông tin khách hàng</label>
+        <input type="text" id="searchKeyword" name="searchKeyword" class="form-control"
+               placeholder="Nhập tên, CMND/CCCD/Hộ chiếu hoặc số điện thoại" value="@Context.Request.Query["searchKeyword"]">
+    </div>
+    <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+</form>
+
+<h3>Kết quả tìm kiếm</h3>
+
+@if (Model.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Mã KH</th>
+                <th>Tên khách hàng</th>
+                <th>CMND/CCCD/Hộ chiếu</th>
+                <th>Địa chỉ</th>
+                <th>Số điện thoại</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var customer in Model)
+            {
+                <tr>
+                    <td>@customer.CustomerId</td>
+                    <td>@customer.FullName</td>
+                    <td>@customer.IdentityNumber</td>
+                    <td>@customer.Address</td>
+                    <td>@customer.Phone</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Không tìm thấy khách hàng nào.</p>
+}

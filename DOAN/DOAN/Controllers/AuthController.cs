@@ -9,10 +9,9 @@ namespace DOAN.Controllers
     public class AuthController : Controller
     {
         //lay thong tin tu database
-        private readonly HeThongTaiChinhDbContext _context;
-        public AuthController(HeThongTaiChinhDbContext context)
+        private readonly HeThongTaiChinhDbContext _context = new HeThongTaiChinhDbContext();
+        public AuthController()
         {
-            _context = context;
         }
         // GET: /Account/Login
         public IActionResult Login()
@@ -26,20 +25,14 @@ namespace DOAN.Controllers
         {
             if (ModelState.IsValid)
             {
-                //su dung bam MD5 de bam mat khau
-                var hard_Password = GetMD5(account.Password);
                 //so sanh voi database
-                var user = _context.Users.Where(s => s.Username == account.Username && hard_Password == account.Password).FirstOrDefault();
+                var user = _context.Users.Where(s => s.Username == account.TenDangNhap && s.PasswordHash == account.MatKhau).FirstOrDefault();
                 if (user != null)
                 {
-                    HttpContext.Session.SetString("Username", account.Username);
-                    return RedirectToAction("Index", "Home");
+                    HttpContext.Session.SetString("TenDangNhap", account.TenDangNhap);
+                    return RedirectToAction("Index", "Dashboard");
                 }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    return View();
-                }
+                ModelState.AddModelError("", "Tên đăng nhập hoặc mật khẩu không đúng");
 
             }
             return View();
@@ -53,20 +46,6 @@ namespace DOAN.Controllers
             HttpContext.Session.Clear();
             // Chuyển hướng về trang đăng nhập
             return RedirectToAction("Login", "Account");
-        }
-
-        //ham bam MD5
-        public string GetMD5(string str)
-        {
-            MD5 md5 = new MD5CryptoServiceProvider();
-            byte[] fromData = Encoding.UTF8.GetBytes(str);
-            byte[] targetData = md5.ComputeHash(fromData);
-            string byte2String = null;
-            for (int i = 0; i < targetData.Length; i++)
-            {
-                byte2String += targetData[i].ToString("x2");
-            }
-            return byte2String;
         }
     }
 }

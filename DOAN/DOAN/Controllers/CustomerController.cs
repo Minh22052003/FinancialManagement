@@ -7,28 +7,89 @@ namespace DOAN.Controllers
     public class CustomerController : Controller
     {
 
-        private readonly HeThongTaiChinhDbContext _context;
+        private readonly HeThongTaiChinhDbContext _context = new HeThongTaiChinhDbContext();
 
-        public CustomerController(HeThongTaiChinhDbContext context)
+        public CustomerController()
         {
-            _context = context;
         }
 
         //get danh sach khach hang va chuyen thanh customerdto
         [HttpGet]
-        public IActionResult Index(string? search)
+        public IActionResult Index()
+        {
+            var customers = _context.Customers.ToList();
+
+            var customerDtos = customers.Select(customer => new Customer_DTO
+            {
+                CustomerId = customer.CustomerId,
+                FullName = customer.FullName,
+                DateOfBirth = customer.DateOfBirth,
+                Address = customer.Address,
+                Phone = customer.Phone,
+                Email = customer.Email,
+                IdentityNumber = customer.IdentityNumber
+            }).ToList();
+
+            return View(customerDtos);
+        }
+
+        //get view de them khach hang
+        [HttpGet]
+        public IActionResult ThemKhachHang()
+        {
+            return View();
+        }
+
+
+        //httppost de them khach hang dua tren customerdto va tra ve view danh sach khach hang
+        [HttpPost]
+        public IActionResult ThemKhachHang(Customer_DTO customerDto)
+        {
+            if (ModelState.IsValid)
+            {
+                // Lấy thời gian hiện tại để tạo ID
+                var now = DateTime.Now;
+                int prefix = int.Parse(DateTime.Now.ToString("yyMM"));
+                int countInMonth = _context.Customers
+                    .Count(c => c.CustomerId.ToString().StartsWith(prefix.ToString())) + 1;
+
+
+                string customerId = prefix + countInMonth.ToString("D2");
+
+                var customer = new Customer
+                {
+                    CustomerId = int.Parse(customerId),
+                    FullName = customerDto.FullName,
+                    DateOfBirth = customerDto.DateOfBirth,
+                    Address = customerDto.Address,
+                    Phone = customerDto.Phone,
+                    Email = customerDto.Email,
+                    IdentityNumber = customerDto.IdentityNumber
+                };
+                _context.Customers.Add(customer);
+                _context.SaveChanges();
+                return RedirectToAction("Index");
+            }
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult TimKiemVaTraCuu(string? searchKeyword)
         {
             var query = _context.Customers.AsQueryable();
 
-            if (!string.IsNullOrEmpty(search))
+            if (!string.IsNullOrEmpty(searchKeyword))
             {
-                if (int.TryParse(search, out int id))
+                if (int.TryParse(searchKeyword, out int id))
                 {
                     query = query.Where(c => c.CustomerId == id);
                 }
                 else
                 {
-                    query = query.Where(c => c.FullName.Contains(search));
+                    query = query.Where(c =>
+                        c.FullName.Contains(searchKeyword) ||
+                        c.IdentityNumber.Contains(searchKeyword) ||
+                        c.Phone.Contains(searchKeyword));
                 }
             }
 
@@ -43,32 +104,12 @@ namespace DOAN.Controllers
                 IdentityNumber = customer.IdentityNumber
             }).ToList();
 
-            return Ok(customerDtos);
+            return View(customerDtos);
         }
 
 
 
-        //httppost de them khach hang dua tren customerdto va tra ve view danh sach khach hang
-        [HttpPost]
-        public IActionResult Create(Customer_DTO customerDto)
-        {
-            if (ModelState.IsValid)
-            {
-                var customer = new Customer
-                {
-                    FullName = customerDto.FullName,
-                    DateOfBirth = customerDto.DateOfBirth,
-                    Address = customerDto.Address,
-                    Phone = customerDto.Phone,
-                    Email = customerDto.Email,
-                    IdentityNumber = customerDto.IdentityNumber
-                };
-                _context.Customers.Add(customer);
-                _context.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            return View();
-        }
+
 
         //get view de hien thi thong tin khach hang can sua dua tren id
         [HttpGet]
