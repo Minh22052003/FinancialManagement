@@ -17,17 +17,167 @@
     <tbody>
         @foreach (var item in Model)
         {
-            <tr>
+            <tr id="row_@item.CustomerId">
                 <td>@item.CustomerId</td>
                 <td>@item.FullName</td>
                 <td>@item.IdentityNumber</td>
                 <td>@item.Address</td>
                 <td>@item.Phone</td>
                 <td>
-                    <a href="#" class="btn btn-warning btn-sm">Sửa</a>
-                    <a href="#" class="btn btn-danger btn-sm">Xóa</a>
+                    <a href="javascript:void(0)" class="btn btn-warning btn-sm" onclick="openEditModal(@item.CustomerId)">Sửa</a>
+                    <a href="javascript:void(0)" class="btn btn-danger btn-sm" onclick="openDeleteModal(@item.CustomerId)">Xóa</a>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+<!-- Modal Edit -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chỉnh sửa thông tin khách hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editCustomerId" name="CustomerId" />
+                    <div class="mb-3">
+                        <label class="form-label">Mã KH</label>
+                        <input type="text" class="form-control" id="editCustomerIdDisplay" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tên khách hàng</label>
+                        <input type="text" class="form-control" id="editFullName" name="FullName">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ngày sinh</label>
+                        <input type="date" class="form-control" id="editDateOfBirth" name="DateOfBirth">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">CMND/CCCD/Hộ chiếu</label>
+                        <input type="text" class="form-control" id="editIdentityNumber" name="IdentityNumber">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ</label>
+                        <input type="text" class="form-control" id="editAddress" name="Address">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại</label>
+                        <input type="text" class="form-control" id="editPhone" name="Phone">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="editEmail" name="Email">
+                    </div>
+                </form>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="saveChanges()">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Delete -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="deleteModalBody">
+                Bạn có chắc chắn muốn xóa khách hàng này không?
+            </div>
+            <div class="modal-footer" id="deleteModalFooter">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" onclick="deleteCustomer()">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Thông báo thành công (có thể dùng modal tạm thời) -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thông báo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="text-success" id="successMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var deleteCustomerId = 0;
+
+    // Mở modal Edit và tải dữ liệu khách hàng qua AJAX
+    function openEditModal(id) {
+        $.get('/Customer/Edit', { id: id }, function (data) {
+            if (data) {
+                $('#editCustomerId').val(data.customerId);
+                $('#editCustomerIdDisplay').val(data.customerId);
+                $('#editFullName').val(data.fullName);
+                $('#editDateOfBirth').val(data.dateOfBirth ? data.dateOfBirth.substring(0,10) : '');
+                $('#editIdentityNumber').val(data.identityNumber);
+                $('#editAddress').val(data.address);
+                $('#editPhone').val(data.phone);
+                $('#editEmail').val(data.email);
+
+                var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+                editModal.show();
+            }
+        });
+    }
+
+        function saveChanges() {
+        var dataToSend = $('#editForm').serialize();
+        $.post('/Customer/Edit', dataToSend, function (response) {
+            if (response.success) {
+                bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                $('#successMessage').text('Sửa thông tin thành công!');
+                var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                successModal.show();
+                var row = $('#row_' + $('#editCustomerId').val());
+                row.find('td:nth-child(2)').text($('#editFullName').val());
+                row.find('td:nth-child(3)').text($('#editIdentityNumber').val());
+                row.find('td:nth-child(4)').text($('#editAddress').val());
+                row.find('td:nth-child(5)').text($('#editPhone').val());
+            } else {
+                alert('Có lỗi xảy ra khi lưu thay đổi.');
+            }
+        });
+    }
+
+
+    function openDeleteModal(id) {
+        deleteCustomerId = id;
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    }
+
+    function deleteCustomer() {
+        $.post('/Customer/Delete', { id: deleteCustomerId }, function (response) {
+            if (response.success) {
+                // Hiển thị thông báo xóa thành công
+                $('#deleteModalBody').html("<p class='text-success text-center'>Xóa thành công!</p>");
+                $('#deleteModalFooter').html("<button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Đóng</button>");
+                // Xóa dòng khách hàng khỏi bảng
+                $('#row_' + deleteCustomerId).remove();
+            } else {
+                alert('Có lỗi xảy ra khi xóa khách hàng.');
+            }
+        });
+    }
+</script>

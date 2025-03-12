@@ -1,24 +1,22 @@
 ﻿using DOAN.DTOs;
 using DOAN.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace DOAN.Controllers
 {
     public class CustomerController : Controller
     {
-
         private readonly HeThongTaiChinhDbContext _context = new HeThongTaiChinhDbContext();
 
-        public CustomerController()
-        {
-        }
+        public CustomerController() { }
 
-        //get danh sach khach hang va chuyen thanh customerdto
+        // Hiển thị danh sách khách hàng
         [HttpGet]
         public IActionResult Index()
         {
             var customers = _context.Customers.ToList();
-
             var customerDtos = customers.Select(customer => new Customer_DTO
             {
                 CustomerId = customer.CustomerId,
@@ -29,31 +27,24 @@ namespace DOAN.Controllers
                 Email = customer.Email,
                 IdentityNumber = customer.IdentityNumber
             }).ToList();
-
             return View(customerDtos);
         }
 
-        //get view de them khach hang
+        // Thêm khách hàng mới (các action thêm khách hàng giữ nguyên)
         [HttpGet]
         public IActionResult ThemKhachHang()
         {
             return View();
         }
 
-
-        //httppost de them khach hang dua tren customerdto va tra ve view danh sach khach hang
         [HttpPost]
         public IActionResult ThemKhachHang(Customer_DTO customerDto)
         {
             if (ModelState.IsValid)
             {
-                // Lấy thời gian hiện tại để tạo ID
                 var now = DateTime.Now;
-                int prefix = int.Parse(DateTime.Now.ToString("yyMM"));
-                int countInMonth = _context.Customers
-                    .Count(c => c.CustomerId.ToString().StartsWith(prefix.ToString())) + 1;
-
-
+                int prefix = int.Parse(now.ToString("yyMM"));
+                int countInMonth = _context.Customers.Count(c => c.CustomerId.ToString().StartsWith(prefix.ToString())) + 1;
                 string customerId = prefix + countInMonth.ToString("D2");
 
                 var customer = new Customer
@@ -73,11 +64,11 @@ namespace DOAN.Controllers
             return View();
         }
 
+        // Tìm kiếm khách hàng (giữ nguyên nếu cần)
         [HttpGet]
         public IActionResult TimKiemVaTraCuu(string? searchKeyword)
         {
             var query = _context.Customers.AsQueryable();
-
             if (!string.IsNullOrEmpty(searchKeyword))
             {
                 if (int.TryParse(searchKeyword, out int id))
@@ -91,37 +82,32 @@ namespace DOAN.Controllers
                         c.IdentityNumber.Contains(searchKeyword) ||
                         c.Phone.Contains(searchKeyword));
                 }
+                var customerDtos = query.Select(customer => new Customer_DTO
+                {
+                    CustomerId = customer.CustomerId,
+                    FullName = customer.FullName,
+                    DateOfBirth = customer.DateOfBirth,
+                    Address = customer.Address,
+                    Phone = customer.Phone,
+                    Email = customer.Email,
+                    IdentityNumber = customer.IdentityNumber
+                }).ToList();
+
+                return View(customerDtos);
             }
+            return View();
 
-            var customerDtos = query.Select(customer => new Customer_DTO
-            {
-                CustomerId = customer.CustomerId,
-                FullName = customer.FullName,
-                DateOfBirth = customer.DateOfBirth,
-                Address = customer.Address,
-                Phone = customer.Phone,
-                Email = customer.Email,
-                IdentityNumber = customer.IdentityNumber
-            }).ToList();
-
-            return View(customerDtos);
         }
 
-
-
-
-
-        //get view de hien thi thong tin khach hang can sua dua tren id
+        // Lấy thông tin khách hàng để chỉnh sửa (trả về JSON)
         [HttpGet]
-        public IActionResult Detail(int id)
+        public IActionResult Edit(int id)
         {
-            //lay thong tin khach hang dua tren id
-            var customer = _context.Customers.Find(id);
+            var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == id);
             if (customer == null)
             {
-                return NotFound();
+                return Json(null);
             }
-            //chuyen tu customer sang customerdto
             var customerDto = new Customer_DTO
             {
                 CustomerId = customer.CustomerId,
@@ -132,46 +118,54 @@ namespace DOAN.Controllers
                 Email = customer.Email,
                 IdentityNumber = customer.IdentityNumber
             };
-            return View(customerDto);
+            return Json(new
+            {
+                customerId = customerDto.CustomerId,
+                fullName = customerDto.FullName,
+                dateOfBirth = customerDto.DateOfBirth?.ToString("yyyy-MM-dd"),
+                address = customerDto.Address,
+                phone = customerDto.Phone,
+                email = customerDto.Email,
+                identityNumber = customerDto.IdentityNumber
+            });
         }
 
-
-
-        //httppost de sua khach hang dua tren customerdto va tra ve view danh sach khach hang
+        // Lưu thay đổi thông tin khách hàng sau chỉnh sửa (trả về JSON)
         [HttpPost]
-        public IActionResult Edit(Customer_DTO customerDto)
+        public IActionResult Edit(Customer_DTO model)
         {
             if (ModelState.IsValid)
             {
-                var customer = _context.Customers.Find(customerDto.CustomerId);
+                var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == model.CustomerId);
                 if (customer == null)
                 {
-                    return NotFound();
+                    return Json(new { success = false });
                 }
-                customer.FullName = customerDto.FullName;
-                customer.DateOfBirth = customerDto.DateOfBirth;
-                customer.Address = customerDto.Address;
-                customer.Phone = customerDto.Phone;
-                customer.Email = customerDto.Email;
-                customer.IdentityNumber = customerDto.IdentityNumber;
+                customer.FullName = model.FullName;
+                customer.DateOfBirth = model.DateOfBirth;
+                customer.Address = model.Address;
+                customer.Phone = model.Phone;
+                customer.Email = model.Email;
+                customer.IdentityNumber = model.IdentityNumber;
+
                 _context.SaveChanges();
-                return RedirectToAction("Index");
+                return Json(new { success = true });
             }
-            return View();
+            return Json(new { success = false });
         }
 
-        //httppost de xoa khach hang dua tren id va tra ve view danh sach khach hang
+        // Xóa khách hàng (trả về JSON)
         [HttpPost]
         public IActionResult Delete(int id)
         {
-            var customer = _context.Customers.Find(id);
+            var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == id);
             if (customer == null)
             {
-                return NotFound();
+                return Json(new { success = false });
             }
             _context.Customers.Remove(customer);
             _context.SaveChanges();
-            return RedirectToAction("Index");
+            return Json(new { success = true });
         }
     }
 }
