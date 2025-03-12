@@ -39,7 +39,7 @@ public partial class HeThongTaiChinhDbContext : DbContext
     {
         modelBuilder.Entity<ApprovalHistory>(entity =>
         {
-            entity.HasKey(e => e.ApprovalId).HasName("PK__Approval__C94AE61A6CD7A8EF");
+            entity.HasKey(e => e.ApprovalId).HasName("PK__Approval__C94AE61A964FD990");
 
             entity.ToTable("ApprovalHistory");
 
@@ -70,9 +70,11 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
         modelBuilder.Entity<Customer>(entity =>
         {
-            entity.HasKey(e => e.CustomerId).HasName("PK__Customer__CD65CB855B3E111E");
+            entity.HasKey(e => e.CustomerId).HasName("PK__Customer__CD65CB853133D025");
 
-            entity.Property(e => e.CustomerId).HasColumnName("customer_id");
+            entity.Property(e => e.CustomerId)
+                .ValueGeneratedNever()
+                .HasColumnName("customer_id");
             entity.Property(e => e.Address)
                 .HasMaxLength(255)
                 .HasColumnName("address");
@@ -96,9 +98,9 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
         modelBuilder.Entity<DepositAccount>(entity =>
         {
-            entity.HasKey(e => e.AccountId).HasName("PK__DepositA__46A222CDA811CF27");
+            entity.HasKey(e => e.AccountId).HasName("PK__DepositA__46A222CD4BFB454C");
 
-            entity.HasIndex(e => e.AccountNumber, "UQ__DepositA__AF91A6AD9B1AFD42").IsUnique();
+            entity.HasIndex(e => e.AccountNumber, "UQ__DepositA__AF91A6AD04AC356C").IsUnique();
 
             entity.Property(e => e.AccountId).HasColumnName("account_id");
             entity.Property(e => e.AccountNumber)
@@ -112,6 +114,9 @@ public partial class HeThongTaiChinhDbContext : DbContext
             entity.Property(e => e.Balance)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("balance");
+            entity.Property(e => e.Branch)
+                .HasMaxLength(250)
+                .HasColumnName("branch");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
@@ -136,7 +141,7 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
         modelBuilder.Entity<FinancialTransaction>(entity =>
         {
-            entity.HasKey(e => e.TransactionId).HasName("PK__Financia__85C600AF1DC1FCBC");
+            entity.HasKey(e => e.TransactionId).HasName("PK__Financia__85C600AF4D6EBC6B");
 
             entity.Property(e => e.TransactionId).HasColumnName("transaction_id");
             entity.Property(e => e.Amount)
@@ -174,7 +179,7 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
         modelBuilder.Entity<LoanAccount>(entity =>
         {
-            entity.HasKey(e => e.LoanId).HasName("PK__LoanAcco__A1F79554931E54B6");
+            entity.HasKey(e => e.LoanId).HasName("PK__LoanAcco__A1F7955431CB2F7E");
 
             entity.Property(e => e.LoanId).HasColumnName("loan_id");
             entity.Property(e => e.ApprovedAmount)
@@ -214,7 +219,7 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
         modelBuilder.Entity<LoanDocument>(entity =>
         {
-            entity.HasKey(e => e.DocumentId).HasName("PK__LoanDocu__9666E8ACC686165C");
+            entity.HasKey(e => e.DocumentId).HasName("PK__LoanDocu__9666E8AC0AB62B5C");
 
             entity.Property(e => e.DocumentId).HasColumnName("document_id");
             entity.Property(e => e.DocumentDetails)
@@ -234,7 +239,7 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
         modelBuilder.Entity<PaymentHistory>(entity =>
         {
-            entity.HasKey(e => e.PaymentId).HasName("PK__PaymentH__ED1FC9EA9C782C08");
+            entity.HasKey(e => e.PaymentId).HasName("PK__PaymentH__ED1FC9EA2AE15A4A");
 
             entity.ToTable("PaymentHistory");
 
@@ -260,9 +265,9 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__B9BE370F686FF2D2");
+            entity.HasKey(e => e.UserId).HasName("PK__Users__B9BE370FA46127B7");
 
-            entity.HasIndex(e => e.Username, "UQ__Users__F3DBC5721F47C99B").IsUnique();
+            entity.HasIndex(e => e.Username, "UQ__Users__F3DBC572509CA5EA").IsUnique();
 
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.CreatedAt)

@@ -25,6 +25,8 @@ public partial class DepositAccount
 
     public string Status { get; set; } = null!;
 
+    public string? Branch { get; set; }
+
     public virtual Customer Customer { get; set; } = null!;
 
     public virtual ICollection<FinancialTransaction> FinancialTransactions { get; set; } = new List<FinancialTransaction>();

@@ -1,8 +1,13 @@
+using DOAN.Models;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-
+// ??ng ký HeThongTaiChinhDbContext
+builder.Services.AddDbContext<HeThongTaiChinhDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
