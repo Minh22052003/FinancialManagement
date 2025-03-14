@@ -72,13 +72,11 @@ namespace DOAN.Controllers
         {
             var now = DateTime.Now;
             string prefix = "9704";
-            string dayPart = now.ToString("dd"); // 2 số ngày
-            string yearPart = now.ToString("yy"); // 2 số năm (ví dụ: "25" cho năm 2025)
+            string dayPart = now.ToString("dd");
+            string yearPart = now.ToString("yy");
 
-            // Ghép phần cố định: ví dụ "97041525"
             string basePrefix = prefix + dayPart + yearPart;
 
-            // Lấy account number cao nhất hiện có có cùng basePrefix
             var latestAccount = _context.DepositAccounts
                 .Where(a => a.AccountNumber.StartsWith(basePrefix))
                 .OrderByDescending(a => a.AccountNumber)
@@ -87,7 +85,6 @@ namespace DOAN.Controllers
             int nextSequence = 1;
             if (latestAccount != null)
             {
-                // Lấy 4 số cuối của số tài khoản hiện có
                 string seqStr = latestAccount.AccountNumber.Substring(basePrefix.Length);
                 if (int.TryParse(seqStr, out int currentSequence))
                 {
@@ -95,11 +92,29 @@ namespace DOAN.Controllers
                 }
             }
 
-            // Định dạng số thứ tự thành chuỗi 4 chữ số
             string sequencePart = nextSequence.ToString("D4");
 
             return basePrefix + sequencePart;
         }
+
+        [HttpGet]
+        public IActionResult TaiKhoanChuyenDung()
+        {
+            return View();
+        }
+
+
+        [HttpPost]
+        public IActionResult TaiKhoanChuyenDung(TaiKhoanChuyenDungViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                
+            }
+            return View(model);
+        }
+
+
 
     }
 }

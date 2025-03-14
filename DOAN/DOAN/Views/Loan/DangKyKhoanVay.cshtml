@@ -1,0 +1,54 @@
+﻿@model DOAN.ViewModel.DangKyKhoanVayViewModel
+@{
+    ViewData["Title"] = "Đăng ký khoản vay mới";
+}
+<h2>Đăng ký khoản vay mới</h2>
+<form>
+    <div class="form-group">
+        <label>Mã khoản vay</label>
+        <input type="text" class="form-control" placeholder="Mã khoản vay">
+    </div>
+    <div class="form-group">
+        <label>Số tiền vay</label>
+        <input type="number" class="form-control" placeholder="Nhập số tiền vay">
+    </div>
+    <div class="form-group">
+        <label>Lãi suất vay ban đầu (%)</label>
+        <input type="number" class="form-control" step="0.01" placeholder="Nhập lãi suất vay">
+    </div>
+    <div class="form-group">
+        <label>Ưu đãi lãi suất</label>
+        <input type="text" class="form-control" placeholder="Ưu đãi áp dụng (nếu có)" disabled>
+    </div>
+    <div class="form-group">
+        <label>Lãi suất cuối cùng (%)</label>
+        <input type="number" class="form-control" step="0.01" placeholder="Lãi suất sau ưu đãi" disabled>
+    </div>
+    <div class="form-group">
+        <label>Thời gian vay (tháng)</label>
+        <input type="number" class="form-control" placeholder="Nhập thời gian vay">
+    </div>
+    <div class="form-group">
+        <label>Ngày giải ngân</label>
+        <input type="date" class="form-control">
+    </div>
+    <div class="form-group">
+        <label>Phương thức trả nợ</label>
+        <select class="form-control">
+            <option>Trả góp</option>
+            <option>Trả một lần</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Hạn mức vay gợi ý</label>
+        <input type="text" class="form-control" placeholder="Hạn mức vay gợi ý" disabled>
+    </div>
+    <div class="form-group">
+        <label>Chọn phương thức thanh toán</label>
+        <select class="form-control">
+            <option>Tự động trừ từ tài khoản chuyên dụng</option>
+            <option>Nộp tiền tại quầy</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary mt-3">Đăng ký khoản vay</button>
+</form>
