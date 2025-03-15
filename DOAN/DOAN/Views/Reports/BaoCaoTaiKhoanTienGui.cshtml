@@ -1,0 +1,28 @@
+﻿@model List<DOAN.Models.DepositAccount>
+
+@{
+    ViewData["Title"] = "Báo cáo danh sách tài khoản tiền gửi";
+}
+
+<h2>Báo cáo danh sách tài khoản tiền gửi</h2>
+<a href="@Url.Action("ExportToPdf", "Reports")" class="btn btn-primary">Xuất PDF</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Mã tài khoản</th>
+            <th>Tên khách hàng</th>
+            <th>Số dư</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.AccountId</td>
+                <td>@(item.Customer != null ? item.Customer.FullName : "Không có dữ liệu")</td>
+                <td>@(item.Balance.ToString("N2") ?? "0.00")</td>
+            </tr>
+        }
+    </tbody>
+</table>

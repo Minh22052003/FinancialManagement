@@ -21,7 +21,7 @@ namespace DOAN.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult MoTaiKhoanTienGui(MoTaiKhoanTienGuiModel model)
+        public IActionResult MoTaiKhoanTienGui(TaiKhoanTienGuiModel model)
         {
             if (ModelState.IsValid)
             {
@@ -113,6 +113,30 @@ namespace DOAN.Controllers
             }
             return View(model);
         }
+
+
+        [HttpGet]
+        public IActionResult DanhSachTaiKhoanTienGui()
+        {
+            var model = (from account in _context.DepositAccounts
+                         join customer in _context.Customers
+                         on account.CustomerId equals customer.CustomerId
+                         select new TaiKhoanTienGuiModel
+                         {
+                             CustomerName = customer.FullName,
+                             PhoneNumber = customer.Phone,
+                             IdentityNumber = customer.IdentityNumber,
+                             AccountType = account.AccountType,
+                             Term = account.Term,
+                             OpenDate = account.CreatedAt,
+                             InitialDeposit = account.Balance,
+                             InterestRate = account.InterestRate,
+                             Branch = account.Branch
+                         }).ToList();
+
+            return View(model);
+        }
+
 
 
 

@@ -1,0 +1,104 @@
+﻿@model List<DOAN.ViewModel.TaiKhoanTienGuiModel>
+@{
+    ViewData["Title"] = "Danh sách tài khoản tiền gửi";
+}
+<h2>Danh sách tài khoản tiền gửi</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Mã tài khoản</th>
+            <th>Tên khách hàng</th>
+            <th>Loại tiền gửi</th>
+            <th>Ngày mở</th>
+            <th>Số tiền gửi ban đầu</th>
+            <th>Lãi suất (%)</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.IdentityNumber</td>
+                <td>@item.CustomerName</td>
+                <td>@item.AccountType</td>
+                <td>@item.OpenDate.ToString("dd/MM/yyyy")</td>
+                <td>@item.InitialDeposit.ToString("N0") VND</td>
+                <td>@(item.InterestRate?.ToString("0.##") ?? "0")%</td>
+                <td>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#detailsModal"
+                            data-name="@item.CustomerName"
+                            data-phone="@item.PhoneNumber"
+                            data-id="@item.IdentityNumber"
+                            data-type="@item.AccountType"
+                            data-open="@item.OpenDate.ToString("dd/MM/yyyy")"
+                            data-deposit="@item.InitialDeposit.ToString("N0")"
+                            data-interest="@((item.InterestRate?.ToString("0.##")) ?? "0")">
+                        Chi tiết
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal hiển thị thông tin chi tiết -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Chi tiết tài khoản</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Tên khách hàng</label>
+                    <input type="text" class="form-control" id="modalCustomerName" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" class="form-control" id="modalPhoneNumber" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">CCCD/CMND/Hộ chiếu</label>
+                    <input type="text" class="form-control" id="modalIdNumber" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Loại tiền gửi</label>
+                    <input type="text" class="form-control" id="modalAccountType" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Ngày mở</label>
+                    <input type="text" class="form-control" id="modalOpenDate" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Số tiền gửi ban đầu</label>
+                    <input type="text" class="form-control" id="modalInitialDeposit" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Lãi suất</label>
+                    <input type="text" class="form-control" id="modalInterestRate" disabled>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var detailsModal = document.getElementById('detailsModal');
+        detailsModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            document.getElementById('modalCustomerName').value = button.getAttribute('data-name');
+            document.getElementById('modalPhoneNumber').value = button.getAttribute('data-phone');
+            document.getElementById('modalIdNumber').value = button.getAttribute('data-id');
+            document.getElementById('modalAccountType').value = button.getAttribute('data-type');
+            document.getElementById('modalOpenDate').value = button.getAttribute('data-open');
+            document.getElementById('modalInitialDeposit').value = button.getAttribute('data-deposit') + " VND";
+            document.getElementById('modalInterestRate').value = button.getAttribute('data-interest') + "%";
+        });
+    });
+</script>

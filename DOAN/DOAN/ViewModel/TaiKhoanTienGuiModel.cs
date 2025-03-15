@@ -1,6 +1,6 @@
 ﻿namespace DOAN.ViewModel
 {
-    public class MoTaiKhoanTienGuiModel
+    public class TaiKhoanTienGuiModel
     {
         // Thông tin khách hàng
         public string CustomerName { get; set; }
@@ -12,7 +12,7 @@
         public int? Term { get; set; } // Thời gian gửi (tháng)
         public DateTime OpenDate { get; set; }
         public decimal InitialDeposit { get; set; }
-        public decimal InterestRate { get; set; }
+        public decimal? InterestRate { get; set; }
 
         // Chi nhánh (giá trị cố định)
         public string Branch { get; set; } = "Bình Gia Branch";
