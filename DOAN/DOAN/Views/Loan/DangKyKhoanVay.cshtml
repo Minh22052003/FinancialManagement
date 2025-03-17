@@ -1,54 +1,148 @@
-﻿@model DOAN.ViewModel.DangKyKhoanVayViewModel
+﻿@model DOAN.Models.LoanAccount
+
 @{
     ViewData["Title"] = "Đăng ký khoản vay mới";
 }
+
 <h2>Đăng ký khoản vay mới</h2>
-<form>
+
+<form asp-action="DangKyKhoanVay" method="post">
     <div class="form-group">
-        <label>Mã khoản vay</label>
-        <input type="text" class="form-control" placeholder="Mã khoản vay">
+        <label>Mã hồ sơ vay</label>
+        <input type="text" id="LoanId" name="LoanId" class="form-control" readonly>
     </div>
+
     <div class="form-group">
-        <label>Số tiền vay</label>
-        <input type="number" class="form-control" placeholder="Nhập số tiền vay">
+        <label>Mã khách hàng</label>
+        <input type="number" id="CustomerId" name="CustomerId" class="form-control" required>
     </div>
+
     <div class="form-group">
-        <label>Lãi suất vay ban đầu (%)</label>
-        <input type="number" class="form-control" step="0.01" placeholder="Nhập lãi suất vay">
+        <label>Tên khách hàng</label>
+        <input type="text" id="CustomerName" class="form-control" readonly>
     </div>
+
     <div class="form-group">
-        <label>Ưu đãi lãi suất</label>
-        <input type="text" class="form-control" placeholder="Ưu đãi áp dụng (nếu có)" disabled>
+        <label>Số dư tài khoản hiện tại</label>
+        <input type="text" id="CurrentBalance" class="form-control" readonly>
     </div>
+
     <div class="form-group">
-        <label>Lãi suất cuối cùng (%)</label>
-        <input type="number" class="form-control" step="0.01" placeholder="Lãi suất sau ưu đãi" disabled>
+        <label>Hạn mức vay tối đa</label>
+        <input type="text" id="MaxLoanAmount" class="form-control" readonly>
     </div>
+
     <div class="form-group">
-        <label>Thời gian vay (tháng)</label>
-        <input type="number" class="form-control" placeholder="Nhập thời gian vay">
+        <label>Số tiền muốn vay</label>
+        <input type="number" id="LoanAmount" name="LoanAmount" class="form-control" required>
     </div>
+
     <div class="form-group">
-        <label>Ngày giải ngân</label>
-        <input type="date" class="form-control">
+        <label>Lãi suất vay (%)</label>
+        <input type="text" id="InterestRate" name="InterestRate" class="form-control" readonly>
     </div>
+
     <div class="form-group">
-        <label>Phương thức trả nợ</label>
-        <select class="form-control">
-            <option>Trả góp</option>
-            <option>Trả một lần</option>
+        <label>Thời hạn vay</label>
+        <select id="LoanTerm" name="LoanTerm" class="form-control">
+            <option value="6">6 tháng</option>
+            <option value="12">12 tháng</option>
+            <option value="24">24 tháng</option>
         </select>
     </div>
+
     <div class="form-group">
-        <label>Hạn mức vay gợi ý</label>
-        <input type="text" class="form-control" placeholder="Hạn mức vay gợi ý" disabled>
+        <label>Ngày vay</label>
+        <input type="date" id="LoanDate" name="CreatedAt" class="form-control" readonly>
     </div>
+
     <div class="form-group">
         <label>Chọn phương thức thanh toán</label>
-        <select class="form-control">
-            <option>Tự động trừ từ tài khoản chuyên dụng</option>
-            <option>Nộp tiền tại quầy</option>
+        <select name="PaymentMethod" class="form-control">
+            <option value="Auto">Tự động trừ từ tài khoản chuyên dụng</option>
+            <option value="Counter">Nộp tiền tại quầy</option>
         </select>
     </div>
-    <button type="submit" class="btn btn-primary mt-3">Đăng ký khoản vay</button>
+
+    <button type="submit" class="btn btn-primary mt-3">Tạo hồ sơ vay vốn</button>
 </form>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Gọi API để tạo mã hồ sơ vay tự động
+            fetch('/Loan/GenerateLoanId')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("LoanId").value = data.loanId;
+                })
+                .catch(error => console.error('Lỗi khi tạo mã hồ sơ vay:', error));
+
+            // Đặt ngày hiện tại cho trường "Ngày vay"
+            document.getElementById("LoanDate").value = new Date().toISOString().split('T')[0];
+
+            // Xử lý khi thay đổi mã khách hàng
+            document.getElementById("CustomerId").addEventListener("change", function () {
+                let customerId = this.value;
+
+                fetch(`/Customer/GetThongTin?maKH=${customerId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data) {
+                            document.getElementById("CustomerName").value = data.tenKhachHang;
+                            // Hiển thị số dư dưới dạng số (không format bằng ký tự không số, để sau khi submit ta có thể parse được)
+                            document.getElementById("CurrentBalance").value = data.soDu;
+
+                            let hanMucToiDa = 0;
+                            let laiSuat = 9.0; // Lãi suất mặc định
+
+                            // Kiểm tra khách hàng VIP (có chữ 'V' trong mã KH)
+                            let isVIP = customerId.includes("V");
+
+                            if (isVIP) {
+                                if (data.soDu < 100000000) { hanMucToiDa = 80000000; laiSuat = 8.0; }
+                                else if (data.soDu < 500000000) { hanMucToiDa = 400000000; laiSuat = 7.5; }
+                                else if (data.soDu < 1000000000) { hanMucToiDa = 900000000; laiSuat = 7.0; }
+                                else { hanMucToiDa = 1200000000; laiSuat = 6.5; }
+                            } else {
+                                if (data.soDu < 100000000) { hanMucToiDa = 50000000; }
+                                else if (data.soDu < 500000000) { hanMucToiDa = 300000000; }
+                                else if (data.soDu < 1000000000) { hanMucToiDa = 700000000; }
+                                else { hanMucToiDa = 1000000000; }
+                            }
+
+                            // Tính hạn mức gợi ý theo công thức
+                            let hanMucGoiY = isVIP ? data.soDu * 1.2 : data.soDu * 0.8;
+                            hanMucToiDa = Math.min(hanMucToiDa, hanMucGoiY);
+
+                            document.getElementById("MaxLoanAmount").value = hanMucToiDa;
+                            document.getElementById("InterestRate").value = laiSuat.toFixed(1) + "%";
+                        }
+                    })
+                    .catch(error => console.error('Lỗi khi lấy thông tin khách hàng:', error));
+            });
+
+            // Kiểm tra số tiền vay không vượt quá hạn mức khi nhập
+            document.getElementById("LoanAmount").addEventListener("input", function () {
+                let loanAmount = parseFloat(this.value);
+                let maxLoanAmount = parseFloat(document.getElementById("MaxLoanAmount").value) || 0;
+
+                if (loanAmount > maxLoanAmount) {
+                    alert("Số tiền vay không được vượt quá hạn mức tối đa!");
+                    this.value = maxLoanAmount;
+                }
+            });
+
+            // Kiểm tra lại trước khi gửi form
+            document.querySelector("form").addEventListener("submit", function (event) {
+                let loanAmount = parseFloat(document.getElementById("LoanAmount").value);
+                let maxLoanAmount = parseFloat(document.getElementById("MaxLoanAmount").value) || 0;
+
+                if (loanAmount > maxLoanAmount) {
+                    alert("Số tiền vay vượt quá hạn mức cho phép. Vui lòng nhập lại!");
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
+}
