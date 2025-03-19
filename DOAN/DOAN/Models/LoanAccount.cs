@@ -7,7 +7,7 @@ public partial class LoanAccount
 {
     public int LoanId { get; set; }
 
-    public int CustomerId { get; set; }
+    public string CustomerId { get; set; } = null!;
 
     public int? LinkedDepositAccountId { get; set; }
 

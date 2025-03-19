@@ -32,7 +32,7 @@ namespace DOAN.Controllers
 
                 var customer = new Customer
                 {
-                    CustomerId = int.Parse(customerIdStr),
+                    CustomerId = customerIdStr,
                     FullName = model.CustomerName,
                     Phone = model.PhoneNumber,
                     IdentityNumber = model.IdentityNumber,

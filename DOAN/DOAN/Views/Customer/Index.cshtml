@@ -72,7 +72,6 @@
                         <input type="email" class="form-control" id="editEmail" name="Email">
                     </div>
                 </form>
-
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
@@ -101,7 +100,25 @@
     </div>
 </div>
 
-<!-- Thông báo thành công (có thể dùng modal tạm thời) -->
+<!-- Modal thông báo lỗi khi thiếu thông tin khi sửa (Hiển thị ở giữa màn hình) -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Lỗi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p id="errorMessage">Thiếu thông tin bắt buộc!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thông báo thành công (cho sửa) -->
 <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -141,7 +158,16 @@
         });
     }
 
-        function saveChanges() {
+    // Kiểm tra dữ liệu trong modal Edit trước khi lưu thay đổi
+    function saveChanges() {
+        // Kiểm tra nếu tên khách hàng hoặc CMND/CCCD bị trống
+        if ($('#editFullName').val().trim() === "" || $('#editIdentityNumber').val().trim() === "") {
+            var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+            $('#errorMessage').text('Thiếu thông tin bắt buộc!');
+            errorModal.show();
+            return;
+        }
+
         var dataToSend = $('#editForm').serialize();
         $.post('/Customer/Edit', dataToSend, function (response) {
             if (response.success) {
@@ -155,28 +181,46 @@
                 row.find('td:nth-child(4)').text($('#editAddress').val());
                 row.find('td:nth-child(5)').text($('#editPhone').val());
             } else {
-                alert('Có lỗi xảy ra khi lưu thay đổi.');
+                var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                $('#errorMessage').text('Có lỗi xảy ra khi lưu thay đổi.');
+                errorModal.show();
             }
         });
     }
 
-
+    // Mở modal Delete và reset lại nội dung modal Delete
     function openDeleteModal(id) {
         deleteCustomerId = id;
+        // Reset lại nội dung modal Delete về mặc định
+        $('#deleteModalBody').html("Bạn có chắc chắn muốn xóa khách hàng này không?");
+        $('#deleteModalFooter').html(
+            "<button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Hủy</button>" +
+            "<button type='button' class='btn btn-danger' onclick='deleteCustomer()'>Xóa</button>"
+        );
         var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
         deleteModal.show();
     }
 
+    // Gọi AJAX xóa khách hàng
     function deleteCustomer() {
+        // Kiểm tra xem dòng khách hàng có tồn tại hay không
+        if (!$('#row_' + deleteCustomerId).length) {
+            var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+            $('#errorMessage').text('Khách hàng này đã bị xóa!');
+            errorModal.show();
+            return;
+        }
         $.post('/Customer/Delete', { id: deleteCustomerId }, function (response) {
             if (response.success) {
-                // Hiển thị thông báo xóa thành công
+                // Hiển thị thông báo xóa thành công trong modal Delete
                 $('#deleteModalBody').html("<p class='text-success text-center'>Xóa thành công!</p>");
                 $('#deleteModalFooter').html("<button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Đóng</button>");
                 // Xóa dòng khách hàng khỏi bảng
                 $('#row_' + deleteCustomerId).remove();
             } else {
-                alert('Có lỗi xảy ra khi xóa khách hàng.');
+                var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                $('#errorMessage').text('Có lỗi xảy ra khi xóa khách hàng.');
+                errorModal.show();
             }
         });
     }

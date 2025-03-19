@@ -49,7 +49,7 @@ namespace DOAN.Controllers
 
                 var customer = new Customer
                 {
-                    CustomerId = int.Parse(customerId),
+                    CustomerId = customerId,
                     FullName = customerDto.FullName,
                     DateOfBirth = customerDto.DateOfBirth,
                     Address = customerDto.Address,
@@ -71,17 +71,13 @@ namespace DOAN.Controllers
             var query = _context.Customers.AsQueryable();
             if (!string.IsNullOrEmpty(searchKeyword))
             {
-                if (int.TryParse(searchKeyword, out int id))
-                {
-                    query = query.Where(c => c.CustomerId == id);
-                }
-                else
-                {
-                    query = query.Where(c =>
-                        c.FullName.Contains(searchKeyword) ||
-                        c.IdentityNumber.Contains(searchKeyword) ||
-                        c.Phone.Contains(searchKeyword));
-                }
+                
+                query = query.Where(c =>
+                    c.CustomerId == searchKeyword ||
+                    c.FullName.Contains(searchKeyword) ||
+                    c.IdentityNumber.Contains(searchKeyword) ||
+                    c.Phone.Contains(searchKeyword));
+
                 var customerDtos = query.Select(customer => new Customer_DTO
                 {
                     CustomerId = customer.CustomerId,
@@ -101,7 +97,7 @@ namespace DOAN.Controllers
 
         // Lấy thông tin khách hàng để chỉnh sửa (trả về JSON)
         [HttpGet]
-        public IActionResult Edit(int id)
+        public IActionResult Edit(string id)
         {
             var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == id);
             if (customer == null)
@@ -156,7 +152,7 @@ namespace DOAN.Controllers
 
         // Xóa khách hàng (trả về JSON)
         [HttpPost]
-        public IActionResult Delete(int id)
+        public IActionResult Delete(string id)
         {
             var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == id);
             if (customer == null)
@@ -170,7 +166,7 @@ namespace DOAN.Controllers
 
         // API lấy thông tin khách hàng theo mã khách hàng (CustomerId)
         [HttpGet]
-        public IActionResult GetThongTin(int maKH)
+        public IActionResult GetThongTin(string maKH)
         {
             var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == maKH);
             if (customer == null)

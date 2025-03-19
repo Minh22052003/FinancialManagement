@@ -5,7 +5,7 @@ namespace DOAN.Models;
 
 public partial class Customer
 {
-    public int CustomerId { get; set; }
+    public string CustomerId { get; set; } = null!;
 
     public string FullName { get; set; } = null!;
 

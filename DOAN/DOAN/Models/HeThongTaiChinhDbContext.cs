@@ -73,7 +73,7 @@ public partial class HeThongTaiChinhDbContext : DbContext
             entity.HasKey(e => e.CustomerId).HasName("PK__Customer__CD65CB853133D025");
 
             entity.Property(e => e.CustomerId)
-                .ValueGeneratedNever()
+                .HasMaxLength(100)
                 .HasColumnName("customer_id");
             entity.Property(e => e.Address)
                 .HasMaxLength(255)
@@ -121,7 +121,9 @@ public partial class HeThongTaiChinhDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
-            entity.Property(e => e.CustomerId).HasColumnName("customer_id");
+            entity.Property(e => e.CustomerId)
+                .HasMaxLength(100)
+                .HasColumnName("customer_id");
             entity.Property(e => e.InterestRate)
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("interest_rate");
@@ -189,7 +191,9 @@ public partial class HeThongTaiChinhDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
-            entity.Property(e => e.CustomerId).HasColumnName("customer_id");
+            entity.Property(e => e.CustomerId)
+                .HasMaxLength(100)
+                .HasColumnName("customer_id");
             entity.Property(e => e.DueDate).HasColumnName("due_date");
             entity.Property(e => e.InterestRate)
                 .HasColumnType("decimal(5, 2)")

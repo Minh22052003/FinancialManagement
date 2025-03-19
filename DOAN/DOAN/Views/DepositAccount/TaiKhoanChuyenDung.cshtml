@@ -1,113 +1,102 @@
 ﻿@model DOAN.ViewModel.TaiKhoanChuyenDungViewModel
+
 @{
     ViewData["Title"] = "Mở tài khoản chuyên dụng";
 }
+
 <h2>Mở tài khoản chuyên dụng</h2>
-<form method="post">
+<form method="post" asp-action="CreateChuyenDung">
     <div class="form-group">
         <label for="paymentOption">Chọn loại tài khoản</label>
-        <select id="paymentOption" name="paymentOption" class="form-control" onchange="toggleAccountType()" required>
+        <select id="paymentOption" name="PaymentOption" class="form-control" onchange="toggleAccountType()" required>
             <option value="">Chọn loại tài khoản</option>
             <option value="Thanh toán lãi vay">Tài khoản thanh toán lãi vay</option>
             <option value="Nhận lãi từ tiền gửi">Tài khoản nhận lãi từ tiền gửi</option>
         </select>
     </div>
+    
+    <!-- Mẫu dành cho tài khoản thanh toán lãi vay -->
     <div id="loanAccountForm" style="display:none;">
         <h4>Thông tin tài khoản thanh toán lãi vay</h4>
-
         <div class="form-group">
             <label for="accountNumber">Số tài khoản</label>
-            <input type="text" id="accountNumber" name="accountNumber" class="form-control" placeholder="Nhập số tài khoản" required>
+            <input type="text" id="accountNumber" name="AccountNumber" class="form-control" placeholder="Nhập số tài khoản" required>
         </div>
-
         <div class="form-group">
             <label for="initialDeposit">Số dư ban đầu</label>
-            <input type="number" id="initialDeposit" name="initialDeposit" class="form-control" placeholder="Nhập số dư ban đầu" required>
+            <input type="number" id="initialDeposit" name="InitialDeposit" class="form-control" placeholder="Nhập số dư ban đầu" required>
         </div>
-
         <div class="form-group">
             <label for="loanAmount">Số tiền vay</label>
-            <input type="number" id="loanAmount" name="loanAmount" class="form-control" placeholder="Nhập số tiền vay" required>
+            <input type="number" id="loanAmount" name="LoanAmount" class="form-control" placeholder="Nhập số tiền vay" required>
         </div>
-
         <div class="form-group">
             <label for="loanTerm">Thời hạn vay (tháng)</label>
-            <input type="number" id="loanTerm" name="loanTerm" class="form-control" placeholder="Nhập thời hạn vay" required>
+            <input type="number" id="loanTerm" name="LoanTerm" class="form-control" placeholder="Nhập thời hạn vay" required>
         </div>
-
         <div class="form-group">
             <label for="monthlyPayment">Số tiền trả hàng tháng</label>
-            <input type="number" id="monthlyPayment" name="monthlyPayment" class="form-control" placeholder="Nhập số tiền phải trả hàng tháng" required>
+            <input type="number" id="monthlyPayment" name="MonthlyPayment" class="form-control" placeholder="Nhập số tiền phải trả hàng tháng" required>
         </div>
-
         <div class="form-group">
             <label for="accountHolder">Chủ tài khoản</label>
-            <input type="text" id="accountHolder" name="accountHolder" class="form-control" placeholder="Nhập tên chủ tài khoản" required>
+            <input type="text" id="accountHolder" name="AccountHolder" class="form-control" placeholder="Nhập tên chủ tài khoản" required>
         </div>
-
         <div class="form-group">
             <label for="accountPurpose">Mục đích tài khoản</label>
-            <input type="text" id="accountPurpose" name="accountPurpose" class="form-control" value="Thanh toán lãi vay" disabled>
+            <input type="text" id="accountPurpose" name="AccountPurpose" class="form-control" value="Thanh toán lãi vay" disabled>
         </div>
     </div>
-
-
+    
+    <!-- Mẫu dành cho tài khoản nhận lãi từ tiền gửi -->
     <div id="depositAccountForm" style="display:none;">
         <h4>Thông tin tài khoản nhận lãi từ tiền gửi</h4>
-
         <div class="form-group">
             <label for="accountNumberDeposit">Số tài khoản</label>
-            <input type="text" id="accountNumberDeposit" name="accountNumberDeposit" class="form-control" placeholder="Nhập số tài khoản" required>
+            <input type="text" id="accountNumberDeposit" name="AccountNumberDeposit" class="form-control" placeholder="Nhập số tài khoản" required>
         </div>
-
         <div class="form-group">
-            <label for="initialDeposit">Số dư ban đầu</label>
-            <input type="number" id="initialDeposit" name="initialDeposit" class="form-control" placeholder="Nhập số dư ban đầu" required>
+            <label for="initialDepositDeposit">Số dư ban đầu</label>
+            <input type="number" id="initialDepositDeposit" name="InitialDepositDeposit" class="form-control" placeholder="Nhập số dư ban đầu" required>
         </div>
-
         <div class="form-group">
             <label for="depositAmount">Số tiền gửi</label>
-            <input type="number" id="depositAmount" name="depositAmount" class="form-control" placeholder="Nhập số tiền gửi" required>
+            <input type="number" id="depositAmount" name="DepositAmount" class="form-control" placeholder="Nhập số tiền gửi" required>
         </div>
-
         <div class="form-group">
-            <label for="interestRate">Lãi suất</label>
-            <input type="number" id="interestRate" name="interestRate" class="form-control" placeholder="Nhập lãi suất" required>
+            <label for="interestRateDeposit">Lãi suất</label>
+            <input type="number" id="interestRateDeposit" name="InterestRateDeposit" class="form-control" placeholder="Nhập lãi suất" required>
         </div>
-
         <div class="form-group">
             <label for="accountHolderDeposit">Chủ tài khoản</label>
-            <input type="text" id="accountHolderDeposit" name="accountHolderDeposit" class="form-control" placeholder="Nhập tên chủ tài khoản" required>
+            <input type="text" id="accountHolderDeposit" name="AccountHolderDeposit" class="form-control" placeholder="Nhập tên chủ tài khoản" required>
         </div>
-
         <div class="form-group">
             <label for="accountPurposeDeposit">Mục đích tài khoản</label>
-            <input type="text" id="accountPurposeDeposit" name="accountPurposeDeposit" class="form-control" value="Nhận lãi từ tiền gửi" disabled>
+            <input type="text" id="accountPurposeDeposit" name="AccountPurposeDeposit" class="form-control" value="Nhận lãi từ tiền gửi" disabled>
         </div>
     </div>
-
+    
     <button type="submit" class="btn btn-primary">Mở tài khoản</button>
 </form>
 
+@section Scripts {
+    <script>
+        function toggleAccountType() {
+            var paymentOption = document.getElementById("paymentOption").value;
+            var loanAccountForm = document.getElementById("loanAccountForm");
+            var depositAccountForm = document.getElementById("depositAccountForm");
 
-
-
-
-<script>
-    function toggleAccountType() {
-        var paymentOption = document.getElementById("paymentOption").value;
-        var loanAccountForm = document.getElementById("loanAccountForm");
-        var depositAccountForm = document.getElementById("depositAccountForm");
-
-        if (paymentOption === "Thanh toán lãi vay") {
-            loanAccountForm.style.display = "block";
-            depositAccountForm.style.display = "none";
-        } else if (paymentOption === "Nhận lãi từ tiền gửi") {
-            depositAccountForm.style.display = "block";
-            loanAccountForm.style.display = "none";
-        } else {
-            loanAccountForm.style.display = "none";
-            depositAccountForm.style.display = "none";
+            if (paymentOption === "Thanh toán lãi vay") {
+                loanAccountForm.style.display = "block";
+                depositAccountForm.style.display = "none";
+            } else if (paymentOption === "Nhận lãi từ tiền gửi") {
+                depositAccountForm.style.display = "block";
+                loanAccountForm.style.display = "none";
+            } else {
+                loanAccountForm.style.display = "none";
+                depositAccountForm.style.display = "none";
+            }
         }
-    }
-</script>
+    </script>
+}

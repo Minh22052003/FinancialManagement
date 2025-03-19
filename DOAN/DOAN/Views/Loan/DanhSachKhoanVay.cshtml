@@ -1,46 +1,262 @@
-﻿@model IEnumerable<DOAN.Models.LoanAccount>
-
-@{
+﻿@{
     ViewData["Title"] = "Danh sách khoản vay";
 }
 
-<h2>Danh sách khoản vay</h2>
+<h2>@ViewData["Title"]</h2>
 
-<table class="table table-bordered">
+<table class="table">
     <thead>
         <tr>
-            <th>Loan Id</th>
-            <th>Tên khách hàng</th>
+            <th>Mã khoản vay</th>
             <th>Số tiền vay</th>
-            <th>Số tiền duyệt</th>
-            <th>Lãi suất</th>
-            <th>Trạng thái</th>
-            <th>Phương thức thanh toán</th>
-            <th>Ngày tạo</th>
-            <th>Ngày đáo hạn</th>
-            <th>Hành động</th>
+            <th>Thời gian vay (tháng)</th>
+            <th>Ngày giải ngân</th>
+            <th class="text-center">Thao tác</th> <!-- Căn giữa chữ "Thao tác" -->
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.LoanId</td>
-                <td>@(item.Customer?.FullName ?? "N/A")</td>
-                <td>@item.LoanAmount.ToString("N2")</td>
-                <td>@(item.ApprovedAmount.HasValue ? item.ApprovedAmount.Value.ToString("N2") : "Chưa duyệt")</td>
-                <td>@(item.InterestRate.HasValue ? item.InterestRate.Value.ToString("N2") + "%" : "N/A")</td>
-                <td>@item.LoanStatus</td>
-                <td>@item.PaymentMethod</td>
-                <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
-                <td>@(item.DueDate.HasValue ? item.DueDate.Value.ToString("dd/MM/yyyy") : "N/A")</td>
-                <td>
-                    <!-- Ví dụ các nút thao tác -->
-                    <a asp-action="Details" asp-route-id="@item.LoanId" class="btn btn-info btn-sm">Chi tiết</a>
-                    <a asp-action="Edit" asp-route-id="@item.LoanId" class="btn btn-warning btn-sm">Sửa</a>
-                    <a asp-action="Delete" asp-route-id="@item.LoanId" class="btn btn-danger btn-sm">Xóa</a>
-                </td>
-            </tr>
-        }
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="d-flex justify-content-center align-items-center">
+                <!-- Căn giữa các nút -->
+                <button class="btn btn-info btn-sm" onclick="openModal(this)">Xem chi tiết</button>
+                <button class="btn btn-warning btn-sm ms-2" onclick="openUpdateModal(this)">Cập nhật</button> <!-- Giảm khoảng cách -->
+            </td>
+        </tr>
+        <!-- Thêm các khoản vay khác ở đây -->
     </tbody>
 </table>
+
+<!-- Modal -->
+<div id="detailsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3>Thông tin chi tiết khoản vay</h3>
+        <form id="loanDetailsForm">
+            <table>
+                <tr>
+                    <th>Mã khoản vay</th>
+                    <td><input type="text" id="loanCode" disabled /></td>
+                </tr>
+                <tr>
+                    <th>Số tiền vay</th>
+                    <td><input type="text" id="loanAmount" disabled /></td>
+                </tr>
+                <tr>
+                    <th>Lãi suất (%)</th>
+                    <td><input type="text" id="interestRate" disabled /></td>
+                </tr>
+                <tr>
+                    <th>Thời gian vay (tháng)</th>
+                    <td><input type="text" id="loanTerm" disabled /></td>
+                </tr>
+                <tr>
+                    <th>Ngày giải ngân</th>
+                    <td><input type="text" id="disbursementDate" disabled /></td>
+                </tr>
+                <tr>
+                    <th>Phương thức trả nợ</th>
+                    <td><input type="text" id="repaymentMethod" disabled /></td>
+                </tr>
+                <tr>
+                    <th>Trạng thái</th>
+                    <td><input type="text" id="loanStatus" disabled /></td>
+                </tr>
+                <tr>
+                    <th>Phương thức thanh toán</th>
+                    <td><input type="text" id="paymentMethod" disabled /></td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+
+<!-- Modal for Update -->
+<div id="updateModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3>Cập nhật khoản vay</h3>
+        <form id="updateForm">
+            <div class="mb-3">
+                <label for="loanCode" class="form-label">Mã khoản vay</label>
+                <input type="text" class="form-control" id="loanCode" disabled>
+            </div>
+            <div class="mb-3">
+                <label for="loanAmount" class="form-label">Số tiền vay</label>
+                <input type="number" class="form-control" id="loanAmount">
+            </div>
+            <div class="mb-3">
+                <label for="loanDuration" class="form-label">Thời gian vay (tháng)</label>
+                <input type="number" class="form-control" id="loanDuration">
+            </div>
+            <div class="mb-3">
+                <label for="disbursementDate" class="form-label">Ngày giải ngân</label>
+                <input type="text" class="form-control" id="disbursementDate" disabled>
+            </div>
+            <div class="mb-3">
+                <label for="interestRate" class="form-label">Lãi suất (%)</label>
+                <input type="number" class="form-control" id="interestRate">
+            </div>
+            <div class="mb-3">
+                <label for="paymentMethod" class="form-label">Phương thức trả nợ</label>
+                <input type="text" class="form-control" id="paymentMethod" disabled>
+            </div>
+            <div class="mb-3">
+                <label for="loanStatus" class="form-label">Trạng thái khoản vay</label>
+                <select class="form-control" id="loanStatus">
+                    <option value="DangTra">Đang trả</option>
+                    <option value="DaTatToan">Đã tất toán</option>
+                    <option value="QuaHan">Quá hạn</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="paymentType" class="form-label">Phương thức thanh toán</label>
+                <select class="form-control" id="paymentType">
+                    <option value="TuDongTru">Tự động trừ từ tài khoản chuyển dụng</option>
+                    <option value="NopTienTaiQuay">Nộp tiền tại quầy</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        /* Modal styles */
+        .modal {
+            display: none; /* Ẩn modal mặc định */
+            position: fixed;
+            z-index: 1; /* Đảm bảo modal nằm trên tất cả các phần tử khác */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Làm mờ nền */
+            overflow: auto;
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Chiều rộng modal */
+            max-width: 800px;
+            max-height: 80%; /* Chiều cao tối đa */
+            overflow-y: auto; /* Cho phép cuộn nếu nội dung quá dài */
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 25px;
+        }
+
+            .close:hover,
+            .close:focus {
+                color: black;
+                text-decoration: none;
+                cursor: pointer;
+            }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .btn {
+            padding: 5px 10px;
+        }
+
+        table td {
+            vertical-align: middle; /* Căn giữa theo chiều dọc */
+        }
+
+        /* Căn giữa chữ "Thao tác" */
+        th.text-center {
+            text-align: center;
+        }
+
+        .d-flex {
+            display: flex;
+        }
+
+        .justify-content-center {
+            justify-content: center;
+        }
+
+        .align-items-center {
+            align-items: center;
+        }
+
+        .ms-2 {
+            margin-left: 0.5rem; /* Giảm khoảng cách giữa các nút */
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        function openModal(button) {
+            var row = button.closest("tr");
+            var loanCode = row.cells[0].textContent;
+            var loanAmount = row.cells[1].textContent;
+            var loanTerm = row.cells[2].textContent;
+            var disbursementDate = row.cells[3].textContent;
+            var repaymentMethod = "";
+            var loanStatus = "";
+            var paymentMethod = ""
+
+            document.getElementById("loanCode").value = loanCode;
+            document.getElementById("loanAmount").value = loanAmount;
+            document.getElementById("interestRate").value = "";
+            document.getElementById("loanTerm").value = loanTerm;
+            document.getElementById("disbursementDate").value = disbursementDate;
+            document.getElementById("repaymentMethod").value = repaymentMethod;
+            document.getElementById("loanStatus").value = loanStatus;
+            document.getElementById("paymentMethod").value = paymentMethod;
+
+            var modal = document.getElementById("detailsModal");
+            modal.style.display = "block";
+        }
+
+        function openUpdateModal(button) {
+            var row = button.closest("tr");
+            var loanCode = row.cells[0].textContent;
+            var loanAmount = row.cells[1].textContent;
+            var loanTerm = row.cells[2].textContent;
+            var disbursementDate = row.cells[3].textContent;
+            var repaymentMethod = "Trả góp";
+            var loanStatus = "Đang hoạt động";
+            var paymentMethod = "Chuyển khoản";
+
+            document.getElementById("loanCode").value = loanCode;
+            document.getElementById("loanAmount").value = loanAmount;
+            document.getElementById("interestRate").value = "..."; // Dữ liệu thực tế
+            document.getElementById("loanDuration").value = loanTerm;
+            document.getElementById("disbursementDate").value = disbursementDate;
+            document.getElementById("paymentMethod").value = paymentMethod;
+            document.getElementById("loanStatus").value = loanStatus;
+
+            var modal = document.getElementById("updateModal");
+            modal.style.display = "block";
+        }
+
+        function closeModal() {
+            var modal = document.getElementById("detailsModal");
+            var updateModal = document.getElementById("updateModal");
+            modal.style.display = "none";
+            updateModal.style.display = "none";
+        }
+    </script>
+}

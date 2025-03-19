@@ -43,6 +43,7 @@ namespace DOAN.Controllers
 
             return RedirectToAction("DanhSachKhoanVay");
         }
+        public IActionResult LichSuTraNo() => View();
 
 
         [HttpGet]

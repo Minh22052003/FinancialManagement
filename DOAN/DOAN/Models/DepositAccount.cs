@@ -7,7 +7,7 @@ public partial class DepositAccount
 {
     public int AccountId { get; set; }
 
-    public int CustomerId { get; set; }
+    public string CustomerId { get; set; } = null!;
 
     public string AccountNumber { get; set; } = null!;
 
