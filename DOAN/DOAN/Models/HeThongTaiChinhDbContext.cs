@@ -29,6 +29,8 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
     public virtual DbSet<PaymentHistory> PaymentHistories { get; set; }
 
+    public virtual DbSet<SpecializedAccount> SpecializedAccounts { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -128,6 +130,7 @@ public partial class HeThongTaiChinhDbContext : DbContext
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("interest_rate");
             entity.Property(e => e.MaturityDate).HasColumnName("maturity_date");
+            entity.Property(e => e.SpecializedAccountId).HasColumnName("SpecializedAccountID");
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
                 .IsUnicode(false)
@@ -139,6 +142,10 @@ public partial class HeThongTaiChinhDbContext : DbContext
                 .HasForeignKey(d => d.CustomerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_DepositAccounts_Customers");
+
+            entity.HasOne(d => d.SpecializedAccount).WithMany(p => p.DepositAccounts)
+                .HasForeignKey(d => d.SpecializedAccountId)
+                .HasConstraintName("FK_DepositAccounts_SpecializedAccounts");
         });
 
         modelBuilder.Entity<FinancialTransaction>(entity =>
@@ -265,6 +272,17 @@ public partial class HeThongTaiChinhDbContext : DbContext
                 .HasForeignKey(d => d.LoanId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_PaymentHistory_LoanAccounts");
+        });
+
+        modelBuilder.Entity<SpecializedAccount>(entity =>
+        {
+            entity.HasKey(e => e.AccountId).HasName("PK__Speciali__349DA5A6B5AF7EA1");
+
+            entity.Property(e => e.AccountHolder).HasMaxLength(100);
+            entity.Property(e => e.AccountType)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.Balance).HasColumnType("decimal(18, 2)");
         });
 
         modelBuilder.Entity<User>(entity =>

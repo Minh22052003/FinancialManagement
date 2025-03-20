@@ -27,9 +27,13 @@ public partial class DepositAccount
 
     public string? Branch { get; set; }
 
+    public int? SpecializedAccountId { get; set; }
+
     public virtual Customer Customer { get; set; } = null!;
 
     public virtual ICollection<FinancialTransaction> FinancialTransactions { get; set; } = new List<FinancialTransaction>();
 
     public virtual ICollection<LoanAccount> LoanAccounts { get; set; } = new List<LoanAccount>();
+
+    public virtual SpecializedAccount? SpecializedAccount { get; set; }
 }

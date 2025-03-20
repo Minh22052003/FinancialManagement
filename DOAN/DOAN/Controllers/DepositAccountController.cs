@@ -21,10 +21,11 @@ namespace DOAN.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult MoTaiKhoanTienGui(TaiKhoanTienGuiModel model)
+        public IActionResult MoTaiKhoanTienGui(TaiKhoanChuyenDungViewModel model)
         {
             if (ModelState.IsValid)
             {
+                // 1. Create a new customer using information from the view model.
                 var now = DateTime.Now;
                 int prefix = int.Parse(now.ToString("yyMM"));
                 int countInMonth = _context.Customers.Count(c => c.CustomerId.ToString().StartsWith(prefix.ToString())) + 1;
@@ -40,10 +41,11 @@ namespace DOAN.Controllers
                 _context.Customers.Add(customer);
                 _context.SaveChanges();
 
+                // 2. Create a deposit account record using info from model.
                 var depositAccount = new DepositAccount
                 {
                     CustomerId = customer.CustomerId,
-                    AccountNumber = GenerateAccountNumber(),
+                    AccountNumber = GenerateAccountNumber(),  // Your function to generate account number
                     AccountType = model.AccountType,
                     Balance = model.InitialDeposit,
                     Term = model.Term,
@@ -62,7 +64,28 @@ namespace DOAN.Controllers
                 _context.DepositAccounts.Add(depositAccount);
                 _context.SaveChanges();
 
-                return RedirectToAction("Index");
+                // 3. If the user selected "mochuyendung" as the interest receive method,
+                // create a specialized account with Balance = 0 and AccountType = "NhanLai".
+                if (!string.IsNullOrEmpty(model.InterestReceiveMethod) &&
+                    model.InterestReceiveMethod.Equals("mochuyendung", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Create specialized account record.
+                    var specialized = new SpecializedAccount
+                    {
+                        AccountHolder = model.AccountHolderDeposit, // Provided by user in the deposit account form
+                        Balance = 0,  // Balance set to 0 initially
+                        AccountType = "NhanLai"
+                    };
+
+                    _context.SpecializedAccounts.Add(specialized);
+                    _context.SaveChanges();
+
+                    // Update the deposit account to link with the specialized account.
+                    depositAccount.SpecializedAccountId = specialized.AccountId;
+                    _context.SaveChanges();
+                }
+
+                return RedirectToAction("DanhSachTaiKhoanTienGui"); // Redirect to the list or confirmation page.
             }
             return View(model);
         }
@@ -95,23 +118,6 @@ namespace DOAN.Controllers
             string sequencePart = nextSequence.ToString("D4");
 
             return basePrefix + sequencePart;
-        }
-
-        [HttpGet]
-        public IActionResult TaiKhoanChuyenDung()
-        {
-            return View();
-        }
-
-
-        [HttpPost]
-        public IActionResult TaiKhoanChuyenDung(TaiKhoanChuyenDungViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                
-            }
-            return View(model);
         }
 
 

@@ -23,29 +23,50 @@
         <span asp-validation-for="IdentityNumber" class="text-danger"></span>
     </div>
 
-    <!-- Chi nhánh: hiển thị cố định nhưng gửi về server qua hidden input -->
     <div class="form-group">
         <label>Chi nhánh:</label>
         <input type="text" class="form-control" value="Bình Gia Branch" disabled />
-        <!-- Giải pháp 2: gán trực tiếp value -->
         <input type="hidden" asp-for="Branch" value="Bình Gia Branch" />
     </div>
 
     <div class="form-group">
         <label asp-for="AccountType">Loại tiền gửi:</label>
-        <select asp-for="AccountType" class="form-control" id="accountType" onchange="toggleDurationField()">
-            <option value="tietkiem">Tiết kiệm</option>
-            <option value="cokyhan">Có kỳ hạn</option>
-            <option value="khongkyhan">Không kỳ hạn</option>
+        <select asp-for="AccountType" class="form-control" id="accountType" onchange="toggleAccountFields()">
+            <option value="">-- Chọn loại tài khoản --</option>
+            <option value="cokyhan">Tiết kiệm có kỳ hạn</option>
+            <option value="khongkyhan">Tiết kiệm không kỳ hạn</option>
             <option value="thanhtoan">Thanh toán</option>
         </select>
         <span asp-validation-for="AccountType" class="text-danger"></span>
     </div>
 
-    <div class="form-group" id="durationField" style="display: none;">
+    <div class="form-group" id="termField" style="display: none;">
         <label asp-for="Term">Thời gian gửi (tháng):</label>
-        <input asp-for="Term" class="form-control" id="duration" />
+        <input asp-for="Term" class="form-control" id="termInput" />
         <span asp-validation-for="Term" class="text-danger"></span>
+    </div>
+
+    <div class="form-group" id="interestMethodField" style="display: none;">
+        <label for="interestReceiveMethod">Phương thức nhận lãi:</label>
+        <select class="form-control" id="interestReceiveMethod" name="InterestReceiveMethod" onchange="toggleReceiveMethod()">
+            <option value="taquay">Nhận tại quầy</option>
+            <option value="mochuyendung">Mở tài khoản chuyên dụng nhận lãi</option>
+        </select>
+    </div>
+
+    <!-- Form tài khoản chuyên dụng nhận lãi -->
+    <div id="depositAccountForm" style="display:none; border:1px solid #ccc; padding:15px; border-radius:8px;">
+        <h4>Thông tin tài khoản nhận lãi từ tiền gửi</h4>
+
+        <div class="form-group">
+            <label for="accountNumberDeposit">Số tài khoản</label>
+            <input type="text" id="accountNumberDeposit" name="AccountNumberDeposit" class="form-control" readonly>
+        </div>
+
+        <div class="form-group">
+            <label for="accountHolderDeposit">Chủ tài khoản</label>
+            <input type="text" id="accountHolderDeposit" name="AccountHolderDeposit" class="form-control" placeholder="Nhập tên chủ tài khoản" required>
+        </div>
     </div>
 
     <div class="form-group">
@@ -71,13 +92,33 @@
 </form>
 
 <script>
-    function toggleDurationField() {
+    function toggleAccountFields() {
         var accountType = document.getElementById("accountType").value;
-        var durationField = document.getElementById("durationField");
-        if (accountType === "tietkiem" || accountType === "cokyhan") {
-            durationField.style.display = "block";
+        var termField = document.getElementById("termField");
+        var interestMethodField = document.getElementById("interestMethodField");
+        var depositForm = document.getElementById("depositAccountForm");
+
+        if (accountType === "cokyhan") {
+            termField.style.display = "block";
+            interestMethodField.style.display = "block";
         } else {
-            durationField.style.display = "none";
+            termField.style.display = "none";
+            interestMethodField.style.display = "none";
+            depositForm.style.display = "none";
+        }
+    }
+
+    function toggleReceiveMethod() {
+        var method = document.getElementById("interestReceiveMethod").value;
+        var depositForm = document.getElementById("depositAccountForm");
+        var accountNumberInput = document.getElementById("accountNumberDeposit");
+
+        if (method === "mochuyendung") {
+            depositForm.style.display = "block";
+            var randomAccountNumber = Math.floor(1000000000 + Math.random() * 9000000000);
+            accountNumberInput.value = randomAccountNumber;
+        } else {
+            depositForm.style.display = "none";
         }
     }
 </script>

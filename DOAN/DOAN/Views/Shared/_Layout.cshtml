@@ -60,20 +60,40 @@
             font-weight: bold;
         }
 
+        /* Dropdown menu styling: căn lề trái của dropdown */
         .dropdown-menu {
             display: none;
             position: absolute;
             top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0; /* Điều chỉnh ở đây */
             background: white;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             min-width: 200px;
             z-index: 1000;
         }
 
-        .nav-item:hover .dropdown-menu {
+        /* Hiển thị dropdown khi hover trên nav-item */
+        .nav-item:hover > .dropdown-menu {
             display: block;
+        }
+
+        /* Submenu: thêm dấu chấm phẩy và chỉnh vị trí */
+        .dropdown-menu .submenu {
+            display: none !important;
+            position: absolute;
+            top: 0;
+            left: 100%; /* Hiển thị bên phải mục cha */
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        /* Hiển thị submenu khi hover vào dropdown-submenu */
+        .dropdown-menu .dropdown-submenu:hover > .submenu {
+            display: block !important;
         }
     </style>
 </head>
@@ -99,7 +119,7 @@
                 <ul class="navbar-nav">
                     <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="Index">Trang chủ</a></li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link" href="#">Quản lý khách hàng</a>
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Quản lý khách hàng</a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" asp-controller="Customer" asp-action="Index">Danh sách khách hàng</a></li>
                             <li><a class="dropdown-item" asp-controller="Customer" asp-action="ThemKhachHang">Thêm khách hàng</a></li>
@@ -107,19 +127,29 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link" href="#">Quản lý tài khoản tiền gửi</a>
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Quản lý tài khoản tiền gửi</a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" asp-controller="DepositAccount" asp-action="MoTaiKhoanTienGui">Mở tài khoản tiền gửi</a></li>
-                            <li><a class="dropdown-item" asp-controller="DepositAccount" asp-action="GuiTien">Gửi tiền</a></li>
-                            <li><a class="dropdown-item" asp-controller="DepositAccount" asp-action="RutTien">Rút tiền</a></li>
-                            <li><a class="dropdown-item" asp-controller="DepositAccount" asp-action="TaiKhoanChuyenDung">Mở tài khoản chuyên dụng</a></li>
                             <li><a class="dropdown-item" asp-controller="DepositAccount" asp-action="DanhSachTaiKhoanChuyenDung">Danh sách tài khoản chuyên dụng</a></li>
                             <li><a class="dropdown-item" asp-controller="DepositAccount" asp-action="DanhSachTaiKhoanTienGui">Danh sách tài khoản tiền gửi</a></li>
-                            <li><a class="dropdown-item" asp-controller="DepositAccount" asp-action="LichSuGiaoDich">Lịch sử giao dịch</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link" href="#">Quản lý khoản vay</a>
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Quản lý giao dịch</a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-submenu position-relative">
+                                <a class="dropdown-item">Gửi tiền <span class="triangle"></span></a>
+                                <ul class="dropdown-menu submenu position-absolute start-100 top-0">
+                                    <li><a class="dropdown-item" asp-controller="Transaction" asp-action="GuiTienThanhToan">Gửi tiền vào TK thanh toán</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Transaction" asp-action="GuiTienChuyenDung">Gửi tiền vào TK chuyên dụng</a></li>
+                                </ul>
+                            </li>
+                            <li><a class="dropdown-item" asp-controller="Transaction" asp-action="RutTien">Rút tiền</a></li>
+                            <li><a class="dropdown-item" asp-controller="Transaction" asp-action="LichSuGiaoDich">Lịch sử giao dịch</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Quản lý khoản vay</a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" asp-controller="Loan" asp-action="DangKyKhoanVay">Đăng ký khoản vay</a></li>
                             <li><a class="dropdown-item" asp-controller="Loan" asp-action="DanhSachKhoanVay">Danh sách khoản vay</a></li>
@@ -127,7 +157,7 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link" href="#">Báo cáo & Thống kê</a>
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Báo cáo & Thống kê</a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" asp-controller="Reports" asp-action="BaoCaoDanhSachKhoanVay">Báo cáo danh sách khoản vay</a></li>
                             <li><a class="dropdown-item" asp-controller="Reports" asp-action="BaoCaoKhoanVayDenHan">Báo cáo khoản vay đến hạn</a></li>
@@ -161,5 +191,44 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     @RenderSection("Scripts", required: false)
+    <style>
+        .submenu {
+            display: none !important position: absolute;
+            top: 0;
+            left: 100%;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .dropdown-submenu:hover > .submenu {
+            display: block !important;
+        }
+
+        .triangle {
+            display: inline-block;
+            margin-left: 5px;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 4px solid #6c757d;
+            vertical-align: middle;
+        }
+    </style>
+    <script>
+                document.querySelectorAll('.dropdown-submenu').forEach(function(submenu) {
+            submenu.addEventListener('mouseenter', function() {
+                this.querySelector('.submenu').style.display = 'block';
+            });
+            submenu.addEventListener('mouseleave', function() {
+                this.querySelector('.submenu').style.display = 'none';
+            });
+        });
+
+    </script>
 </body>
 </html>

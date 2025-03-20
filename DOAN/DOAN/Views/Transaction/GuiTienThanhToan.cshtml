@@ -1,0 +1,97 @@
+﻿@model DOAN.Views.Transaction.GuiTienThanhToanModel
+@{
+	ViewData["Title"] = "Gửi tiền vào tài khoản thanh toán";
+}
+
+<h2 class="mt-3">Chọn loại giao dịch</h2>
+<div class="mb-3">
+    <input type="radio" id="sendSelf" name="sendOption" /> Gửi tiền vào tài khoản của chính mình
+    <input type="radio" id="sendOthers" name="sendOption" style="margin-left:20px;" /> Gửi tiền vào tài khoản của khách hàng khác
+</div>
+<!-- Form gửi tiền vào tài khoản chính mình -->
+<div id="formSelf" style="display:none;">
+    <h5>Gửi tiền vào tài khoản thanh toán</h5>
+    <div class="mb-3">
+        <label class="form-label">Số tài khoản (nhận tiền):</label>
+        <input type="text" class="form-control" id="accountSelf" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Chủ tài khoản:</label>
+        <input type="text" class="form-control" id="senderSelf" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Số tiền gửi:</label>
+        <input type="text" class="form-control" id="amountSelf" />
+    </div>
+    <button class="btn btn-primary" id="confirmSelf">Xác nhận gửi tiền</button>
+</div>
+<!-- Form gửi tiền vào tài khoản khách hàng khác -->
+<div id="formOthers" style="display:none;">
+    <h5>Gửi tiền vào tài khoản của khách hàng khác</h5>
+    <div class="mb-3">
+        <label class="form-label">Số tài khoản (nhận tiền):</label>
+        <input type="text" class="form-control" id="accountOther" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Chủ tài khoản:</label>
+        <input type="text" class="form-control" id="receiverOther" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Người gửi:</label>
+        <input type="text" class="form-control" id="senderOther" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Số tiền gửi:</label>
+        <input type="text" class="form-control" id="amountOther" />
+    </div>
+    <button class="btn btn-primary" id="confirmOther">Xác nhận gửi tiền</button>
+</div>
+
+<!-- Popup thông báo -->
+<div id="popup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+    background:white; border:1px solid #ccc; padding:20px; box-shadow:0 0 10px rgba(0,0,0,0.3); z-index:9999; text-align:center;">
+    <h5>Giao dịch thành công!</h5>
+    <p id="codeText"><strong>Mã giao dịch:</strong></p>
+    <button class="btn btn-secondary mt-2" onclick="closePopup()" style="margin-top:15px;">Đóng</button>
+</div>
+<div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.5); z-index:9998;"></div>
+
+<script>
+    document.getElementById("sendSelf").addEventListener("change", function () {
+        document.getElementById("formSelf").style.display = "block";
+        document.getElementById("formOthers").style.display = "none";
+    });
+
+    document.getElementById("sendOthers").addEventListener("change", function () {
+        document.getElementById("formSelf").style.display = "none";
+        document.getElementById("formOthers").style.display = "block";
+    });
+
+    function showPopup(code) {
+         document.getElementById("popup").style.display = "block";
+         document.getElementById("overlay").style.display = "block";
+         document.getElementById("codeText").innerHTML = "<strong>Mã giao dịch:</strong> " + code;
+     }
+
+     function closePopup() {
+         document.getElementById("popup").style.display = "none";
+         document.getElementById("overlay").style.display = "none";
+     }
+
+     document.getElementById("confirmSelf").addEventListener("click", function () {
+         const code = ""; 
+         showPopup(code);
+     });
+
+     document.getElementById("confirmOther").addEventListener("click", function () {
+         const code = ""; 
+         showPopup(code);
+     });
+</script>
+
+
+
+
+
+
