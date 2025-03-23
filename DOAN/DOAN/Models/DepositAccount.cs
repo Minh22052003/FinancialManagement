@@ -36,4 +36,6 @@ public partial class DepositAccount
     public virtual ICollection<LoanAccount> LoanAccounts { get; set; } = new List<LoanAccount>();
 
     public virtual SpecializedAccount? SpecializedAccount { get; set; }
+
+    public virtual ICollection<TransactionHistory> TransactionHistories { get; set; } = new List<TransactionHistory>();
 }

@@ -1,4 +1,4 @@
-﻿@model DOAN.ViewModel.TaiKhoanTienGuiModel
+﻿@model DOAN.ViewModel.TaiKhoanChuyenDungViewModel
 @{
     ViewData["Title"] = "Mở tài khoản tiền gửi";
 }
@@ -6,20 +6,25 @@
 
 <form asp-action="MoTaiKhoanTienGui" method="post">
     <div class="form-group">
+        <label for="CustomerId">Mã khách hàng:</label>
+        <input type="text" class="form-control" id="CustomerId" name="CustomerId" required />
+    </div>
+
+    <div class="form-group">
         <label asp-for="CustomerName">Tên khách hàng:</label>
-        <input asp-for="CustomerName" class="form-control" id="customerName" />
+        <input asp-for="CustomerName" class="form-control" id="customerName" readonly />
         <span asp-validation-for="CustomerName" class="text-danger"></span>
     </div>
 
     <div class="form-group">
         <label asp-for="PhoneNumber">Số điện thoại:</label>
-        <input asp-for="PhoneNumber" class="form-control" id="phoneNumber" />
+        <input asp-for="PhoneNumber" class="form-control" id="phoneNumber" readonly />
         <span asp-validation-for="PhoneNumber" class="text-danger"></span>
     </div>
 
     <div class="form-group">
         <label asp-for="IdentityNumber">CMND/CCCD/Hộ chiếu:</label>
-        <input asp-for="IdentityNumber" class="form-control" id="idNumber" />
+        <input asp-for="IdentityNumber" class="form-control" id="idNumber" readonly />
         <span asp-validation-for="IdentityNumber" class="text-danger"></span>
     </div>
 
@@ -58,9 +63,10 @@
     <div id="depositAccountForm" style="display:none; border:1px solid #ccc; padding:15px; border-radius:8px;">
         <h4>Thông tin tài khoản nhận lãi từ tiền gửi</h4>
 
+        <!-- Sử dụng readonly thay vì disabled để giá trị được gửi lên server -->
         <div class="form-group">
-            <label for="accountNumberDeposit">Số tài khoản</label>
-            <input type="text" id="accountNumberDeposit" name="AccountNumberDeposit" class="form-control" readonly>
+            <label for="SpecializedAccountId">Số tài khoản</label>
+            <input type="text" id="SpecializedAccountId" asp-for="AccountNumberDeposit" class="form-control" placeholder="Nhập số tài khoản chuyên dụng">
         </div>
 
         <div class="form-group">
@@ -91,34 +97,57 @@
     <button type="submit" class="btn btn-primary">Mở tài khoản</button>
 </form>
 
-<script>
-    function toggleAccountFields() {
-        var accountType = document.getElementById("accountType").value;
-        var termField = document.getElementById("termField");
-        var interestMethodField = document.getElementById("interestMethodField");
-        var depositForm = document.getElementById("depositAccountForm");
+@section Scripts {
+    <script>
+        // Hiển thị/ẩn các trường dựa theo loại tài khoản
+        function toggleAccountFields() {
+            var accountType = document.getElementById("accountType").value;
+            var termField = document.getElementById("termField");
+            var interestMethodField = document.getElementById("interestMethodField");
+            var depositForm = document.getElementById("depositAccountForm");
 
-        if (accountType === "cokyhan") {
-            termField.style.display = "block";
-            interestMethodField.style.display = "block";
-        } else {
-            termField.style.display = "none";
-            interestMethodField.style.display = "none";
-            depositForm.style.display = "none";
+            if (accountType === "cokyhan") {
+                termField.style.display = "block";
+                interestMethodField.style.display = "block";
+            } else {
+                termField.style.display = "none";
+                interestMethodField.style.display = "none";
+                depositForm.style.display = "none";
+            }
         }
-    }
 
-    function toggleReceiveMethod() {
-        var method = document.getElementById("interestReceiveMethod").value;
-        var depositForm = document.getElementById("depositAccountForm");
-        var accountNumberInput = document.getElementById("accountNumberDeposit");
+        // Hiển thị/ẩn form tài khoản chuyên dụng nhận lãi
+        function toggleReceiveMethod() {
+            var method = document.getElementById("interestReceiveMethod").value;
+            var depositForm = document.getElementById("depositAccountForm");
+            if (method === "mochuyendung") {
+                depositForm.style.display = "block";
 
-        if (method === "mochuyendung") {
-            depositForm.style.display = "block";
-            var randomAccountNumber = Math.floor(1000000000 + Math.random() * 9000000000);
-            accountNumberInput.value = randomAccountNumber;
-        } else {
-            depositForm.style.display = "none";
+                // Giới hạn random trong phạm vi int (1,000,000,000 - 2,147,483,647)
+                var randomAccountNumber = Math.floor(1000000000 + Math.random() * (2147483647 - 1000000000 + 1));
+
+                document.getElementById("SpecializedAccountId").value = randomAccountNumber;
+            } else {
+                depositForm.style.display = "none";
+            }
         }
-    }
-</script>
+
+
+        // Khi nhập mã khách hàng, tự động lấy thông tin khách hàng từ API
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("CustomerId").addEventListener("change", function () {
+                let customerId = this.value;
+                fetch(`/Customer/GetThongTinByGui?maKH=${customerId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data) {
+                            document.getElementById("customerName").value = data.tenKhachHang;
+                            document.getElementById("phoneNumber").value = data.soDienThoai;
+                            document.getElementById("idNumber").value = data.identityNumber;
+                        }
+                    })
+                    .catch(error => console.error('Lỗi khi lấy thông tin khách hàng:', error));
+            });
+        });
+    </script>
+}

@@ -18,6 +18,11 @@ namespace DOAN.Controllers
         {
             return View();
         }
+        public IActionResult DanhSachTaiKhoanChuyenDung()
+        {
+            var data = _context.SpecializedAccounts.ToList();
+            return View(data);
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -25,10 +30,10 @@ namespace DOAN.Controllers
         {
             if (ModelState.IsValid)
             {
-                // 1. Create a new customer using information from the view model.
+                // 1. Tạo khách hàng mới
                 var now = DateTime.Now;
                 int prefix = int.Parse(now.ToString("yyMM"));
-                int countInMonth = _context.Customers.Count(c => c.CustomerId.ToString().StartsWith(prefix.ToString())) + 1;
+                int countInMonth = _context.Customers.Count(c => c.CustomerId.StartsWith(prefix.ToString())) + 1;
                 string customerIdStr = prefix + countInMonth.ToString("D2");
 
                 var customer = new Customer
@@ -41,11 +46,11 @@ namespace DOAN.Controllers
                 _context.Customers.Add(customer);
                 _context.SaveChanges();
 
-                // 2. Create a deposit account record using info from model.
+                // 2. Tạo bản ghi tài khoản tiền gửi
                 var depositAccount = new DepositAccount
                 {
                     CustomerId = customer.CustomerId,
-                    AccountNumber = GenerateAccountNumber(),  // Your function to generate account number
+                    AccountNumber = GenerateAccountNumber(),  // Hàm tạo số tài khoản
                     AccountType = model.AccountType,
                     Balance = model.InitialDeposit,
                     Term = model.Term,
@@ -64,31 +69,47 @@ namespace DOAN.Controllers
                 _context.DepositAccounts.Add(depositAccount);
                 _context.SaveChanges();
 
-                // 3. If the user selected "mochuyendung" as the interest receive method,
-                // create a specialized account with Balance = 0 and AccountType = "NhanLai".
+                // 3. Nếu chọn phương thức nhận lãi là "mochuyendung", tạo tài khoản chuyên dụng
                 if (!string.IsNullOrEmpty(model.InterestReceiveMethod) &&
                     model.InterestReceiveMethod.Equals("mochuyendung", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Create specialized account record.
+
                     var specialized = new SpecializedAccount
                     {
-                        AccountHolder = model.AccountHolderDeposit, // Provided by user in the deposit account form
-                        Balance = 0,  // Balance set to 0 initially
-                        AccountType = "NhanLai"
+                        AccountId = model.AccountNumberDeposit, // Lấy giá trị từ view
+                        AccountHolder = model.AccountHolderDeposit, // Lấy từ form nhập tên chủ tài khoản chuyên dụng
+                        Balance = 0, // Số dư ban đầu là 0
+                        AccountType = "NhanLai",
+                        Branch = model.Branch,
+                        CreateAt = DateTime.Now
                     };
 
                     _context.SpecializedAccounts.Add(specialized);
                     _context.SaveChanges();
 
-                    // Update the deposit account to link with the specialized account.
+                    // Liên kết tài khoản tiền gửi với tài khoản chuyên dụng vừa tạo
                     depositAccount.SpecializedAccountId = specialized.AccountId;
                     _context.SaveChanges();
+
+                    // Nếu bạn muốn trả về id tài khoản chuyên dụng về view (ví dụ hiển thị thông báo), có thể gán:
+                    model.AccountNumberDeposit = specialized.AccountId;
                 }
 
-                return RedirectToAction("DanhSachTaiKhoanTienGui"); // Redirect to the list or confirmation page.
+                return RedirectToAction("DanhSachTaiKhoanTienGui");
             }
-            return View(model);
+            else
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                // Log các lỗi này, ví dụ:
+                foreach (var error in errors)
+                {
+                    Console.WriteLine(error);
+                }
+            }
+                return View(model);
         }
+
+
 
 
         private string GenerateAccountNumber()

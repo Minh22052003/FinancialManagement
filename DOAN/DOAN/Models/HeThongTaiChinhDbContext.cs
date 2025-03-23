@@ -31,6 +31,8 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
     public virtual DbSet<SpecializedAccount> SpecializedAccounts { get; set; }
 
+    public virtual DbSet<TransactionHistory> TransactionHistories { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -217,6 +219,7 @@ public partial class HeThongTaiChinhDbContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("payment_method");
+            entity.Property(e => e.SpecializedAccountId).HasColumnName("specialized_account_id");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.LoanAccounts)
                 .HasForeignKey(d => d.CustomerId)
@@ -226,6 +229,10 @@ public partial class HeThongTaiChinhDbContext : DbContext
             entity.HasOne(d => d.LinkedDepositAccount).WithMany(p => p.LoanAccounts)
                 .HasForeignKey(d => d.LinkedDepositAccountId)
                 .HasConstraintName("FK_LoanAccounts_DepositAccounts");
+
+            entity.HasOne(d => d.SpecializedAccount).WithMany(p => p.LoanAccounts)
+                .HasForeignKey(d => d.SpecializedAccountId)
+                .HasConstraintName("FK_LoanAccounts_SpecializedAccounts");
         });
 
         modelBuilder.Entity<LoanDocument>(entity =>
@@ -276,13 +283,36 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
         modelBuilder.Entity<SpecializedAccount>(entity =>
         {
-            entity.HasKey(e => e.AccountId).HasName("PK__Speciali__349DA5A6B5AF7EA1");
+            entity.HasKey(e => e.AccountId).HasName("PK__Speciali__349DA5A6772B2DCC");
 
-            entity.Property(e => e.AccountHolder).HasMaxLength(100);
-            entity.Property(e => e.AccountType)
-                .HasMaxLength(50)
-                .IsUnicode(false);
+            entity.Property(e => e.AccountId).ValueGeneratedNever();
+            entity.Property(e => e.AccountHolder).HasMaxLength(255);
+            entity.Property(e => e.AccountType).HasMaxLength(50);
             entity.Property(e => e.Balance).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Branch).HasMaxLength(100);
+            entity.Property(e => e.CreateAt).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<TransactionHistory>(entity =>
+        {
+            entity.HasKey(e => e.TransactionId).HasName("PK__Transact__55433A6B1A490E08");
+
+            entity.ToTable("TransactionHistory");
+
+            entity.Property(e => e.TransactionAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TransactionDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.TransactionStatus).HasMaxLength(50);
+            entity.Property(e => e.Transactor).HasMaxLength(255);
+
+            entity.HasOne(d => d.DepositAccount).WithMany(p => p.TransactionHistories)
+                .HasForeignKey(d => d.DepositAccountId)
+                .HasConstraintName("FK_TransactionHistory_DepositAccounts");
+
+            entity.HasOne(d => d.SpecialAccount).WithMany(p => p.TransactionHistories)
+                .HasForeignKey(d => d.SpecialAccountId)
+                .HasConstraintName("FK_TransactionHistory_SpecialAccount");
         });
 
         modelBuilder.Entity<User>(entity =>

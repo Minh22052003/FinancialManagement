@@ -48,20 +48,43 @@
             <option value="6">6 tháng</option>
             <option value="12">12 tháng</option>
             <option value="24">24 tháng</option>
+            <option value="48">48 tháng</option>
+            <option value="60">60 tháng</option>
         </select>
     </div>
 
     <div class="form-group">
         <label>Ngày vay</label>
-        <input type="date" id="LoanDate" name="CreatedAt" class="form-control" readonly>
+        <input type="date" id="LoanDate" name="CreatedAt" class="form-control">
     </div>
 
     <div class="form-group">
         <label>Chọn phương thức thanh toán</label>
-        <select name="PaymentMethod" class="form-control">
+        <select id="PaymentMethod" name="PaymentMethod" class="form-control" required>
+            <option value="">-- Chọn phương thức --</option>
             <option value="Auto">Tự động trừ từ tài khoản chuyên dụng</option>
             <option value="Counter">Nộp tiền tại quầy</option>
         </select>
+    </div>
+
+    <!-- Form tài khoản chuyên dụng, ẩn ban đầu -->
+    <div id="SpecialAccountForm" style="display:none; margin-top: 20px;">
+        <h5>Thông tin tài khoản chuyên dụng</h5>
+
+        <div class="form-group">
+            <label>Số tài khoản</label>
+            <input type="text" name="SpecialAccountNumber" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label>Chủ tài khoản</label>
+            <input type="text" name="SpecialAccountHolder" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label>Loại tài khoản</label>
+            <input type="text" class="form-control" value="Tài khoản chuyên dụng trả lãi vay" readonly>
+        </div>
     </div>
 
     <button type="submit" class="btn btn-primary mt-3">Tạo hồ sơ vay vốn</button>
@@ -70,7 +93,7 @@
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Gọi API để tạo mã hồ sơ vay tự động
+            // Tạo mã hồ sơ vay tự động
             fetch('/Loan/GenerateLoanId')
                 .then(response => response.json())
                 .then(data => {
@@ -78,19 +101,18 @@
                 })
                 .catch(error => console.error('Lỗi khi tạo mã hồ sơ vay:', error));
 
-            // Đặt ngày hiện tại cho trường "Ngày vay"
+            // Set ngày hiện tại cho "Ngày vay"
             document.getElementById("LoanDate").value = new Date().toISOString().split('T')[0];
 
-            // Xử lý khi thay đổi mã khách hàng
+            // Xử lý khi thay đổi mã khách hàng để lấy thông tin khách hàng
             document.getElementById("CustomerId").addEventListener("change", function () {
                 let customerId = this.value;
 
-                fetch(`/Customer/GetThongTin?maKH=${customerId}`)
+                fetch(`/Customer/GetThongTinByVay?maKH=${customerId}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data) {
                             document.getElementById("CustomerName").value = data.tenKhachHang;
-                            // Hiển thị số dư dưới dạng số (không format bằng ký tự không số, để sau khi submit ta có thể parse được)
                             document.getElementById("CurrentBalance").value = data.soDu;
 
                             let hanMucToiDa = 0;
@@ -122,6 +144,18 @@
                     .catch(error => console.error('Lỗi khi lấy thông tin khách hàng:', error));
             });
 
+            // Hiển thị/ẩn form tài khoản chuyên dụng khi thay đổi phương thức thanh toán
+            const paymentMethodSelect = document.getElementById("PaymentMethod");
+            const specialAccountForm = document.getElementById("SpecialAccountForm");
+
+            paymentMethodSelect.addEventListener("change", function () {
+                if (this.value === "Auto") {
+                    specialAccountForm.style.display = "block";
+                } else {
+                    specialAccountForm.style.display = "none";
+                }
+            });
+
             // Kiểm tra số tiền vay không vượt quá hạn mức khi nhập
             document.getElementById("LoanAmount").addEventListener("input", function () {
                 let loanAmount = parseFloat(this.value);
@@ -133,16 +167,6 @@
                 }
             });
 
-            // Kiểm tra lại trước khi gửi form
-            document.querySelector("form").addEventListener("submit", function (event) {
-                let loanAmount = parseFloat(document.getElementById("LoanAmount").value);
-                let maxLoanAmount = parseFloat(document.getElementById("MaxLoanAmount").value) || 0;
-
-                if (loanAmount > maxLoanAmount) {
-                    alert("Số tiền vay vượt quá hạn mức cho phép. Vui lòng nhập lại!");
-                    event.preventDefault();
-                }
-            });
         });
     </script>
 }

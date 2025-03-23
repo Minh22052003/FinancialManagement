@@ -32,10 +32,37 @@ namespace DOAN.Controllers
         [HttpPost]
         public IActionResult DangKyKhoanVay(LoanAccount model)
         {
+            // Thiết lập ngày tạo hồ sơ vay
             model.CreatedAt = DateTime.Now;
             if (string.IsNullOrEmpty(model.LoanStatus))
             {
                 model.LoanStatus = "Pending";
+            }
+
+            // Nếu chọn phương thức thanh toán "Auto", tạo thêm tài khoản chuyên dụng
+            if (model.PaymentMethod == "Auto")
+            {
+                // Lấy thông tin bổ sung từ form (không nằm trong model LoanAccount)
+                string specialAccountHolder = Request.Form["SpecialAccountHolder"];
+
+                // Tạo mới tài khoản chuyên dụng
+                var specializedAccount = new SpecializedAccount
+                {
+                    // Nếu có input cho số tài khoản thì có thể đọc từ Request.Form["SpecialAccountNumber"]
+                    // Tuy nhiên, thường AccountId được tạo tự động nên ta chỉ cần gán tên chủ tài khoản.
+                    AccountHolder = specialAccountHolder,
+                    Balance = 0, // Khởi tạo số dư ban đầu là 0
+                    AccountType = "Tài khoản chuyên dụng trả lãi vay",
+                    Branch = "Bình Gia Branch",
+                    // Chuyển DateTime.Now sang DateOnly (nếu dùng .NET 6+)
+                    CreateAt = DateTime.Now
+                };
+
+                _context.SpecializedAccounts.Add(specializedAccount);
+                _context.SaveChanges();
+
+                // Liên kết tài khoản chuyên dụng vừa tạo với hồ sơ vay
+                model.SpecializedAccountId = specializedAccount.AccountId;
             }
 
             _context.LoanAccounts.Add(model);

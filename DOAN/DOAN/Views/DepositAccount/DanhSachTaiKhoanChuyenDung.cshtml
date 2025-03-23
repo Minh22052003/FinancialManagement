@@ -1,0 +1,123 @@
+﻿@model IEnumerable<DOAN.Models.SpecializedAccount>
+
+@{
+    ViewData["Title"] = "Danh sách tài khoản chuyên dụng";
+}
+
+<h2 class="mb-4 fw-bold">Danh sách tài khoản chuyên dụng</h2>
+
+<table class="table table-hover table-bordered shadow-sm rounded-3 overflow-hidden">
+    <thead class="custom-table-header text-center align-middle">
+        <tr>
+            <th>Số tài khoản</th>
+            <th>Chủ tài khoản</th>
+            <th>Loại tài khoản</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody class="align-middle">
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.AccountId</td>
+                <td>@item.AccountHolder</td>
+                <td>@item.AccountType</td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#detailsModal"
+                            data-so="@item.AccountId"
+                            data-ten="@item.AccountHolder"
+                            data-sodu="@item.Balance"
+                            data-loai="@item.AccountType"
+                            data-branch="@item.Branch"
+                            data-createat="@(@item.CreateAt.ToString("dd/MM/yyyy"))">
+                        Chi tiết
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal chi tiết tài khoản -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="detailsModalLabel">Chi tiết tài khoản chuyên dụng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Số tài khoản</label>
+                    <input type="text" class="form-control" id="modalSoTaiKhoan" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Chủ tài khoản</label>
+                    <input type="text" class="form-control" id="modalChuTaiKhoan" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Số dư</label>
+                    <input type="text" class="form-control" id="modalSoDu" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Loại tài khoản</label>
+                    <input type="text" class="form-control" id="modalLoaiTaiKhoan" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Chi nhánh</label>
+                    <input type="text" class="form-control" id="modalChiNhanh" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Ngày tạo</label>
+                    <input type="text" class="form-control" id="modalCreateAt" disabled>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var detailsModal = document.getElementById('detailsModal');
+            detailsModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                document.getElementById('modalSoTaiKhoan').value = button.getAttribute('data-so');
+                document.getElementById('modalChuTaiKhoan').value = button.getAttribute('data-ten');
+                document.getElementById('modalSoDu').value = button.getAttribute('data-sodu');
+                document.getElementById('modalLoaiTaiKhoan').value = button.getAttribute('data-loai');
+                document.getElementById('modalChiNhanh').value = button.getAttribute('data-branch');
+                document.getElementById('modalCreateAt').value = button.getAttribute('data-createat');
+            });
+        });
+    </script>
+}
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .custom-table-header {
+        background-color: #E6F0FF;
+    }
+
+        .custom-table-header th {
+            color: #0056b3;
+        }
+
+    .modal-content {
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 123, 255, 0.1);
+    }
+
+    .modal-header {
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+</style>

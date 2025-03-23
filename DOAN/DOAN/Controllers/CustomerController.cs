@@ -166,7 +166,7 @@ namespace DOAN.Controllers
 
         // API lấy thông tin khách hàng theo mã khách hàng (CustomerId)
         [HttpGet]
-        public IActionResult GetThongTin(string maKH)
+        public IActionResult GetThongTinByVay(string maKH)
         {
             var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == maKH);
             if (customer == null)
@@ -180,6 +180,25 @@ namespace DOAN.Controllers
                 maKH = customer.CustomerId,
                 tenKhachHang = customer.FullName,
                 soDu = _context.DepositAccounts.Where(a => a.CustomerId == maKH).Sum(a => a.Balance) // Tổng số dư từ các tài khoản
+            });
+        }
+
+        [HttpGet]
+        public IActionResult GetThongTinByGui(string maKH)
+        {
+            var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == maKH);
+            if (customer == null)
+            {
+                return Json(null);
+            }
+
+            // Trả về thông tin khách hàng dưới dạng JSON
+            return Json(new
+            {
+                maKH = customer.CustomerId,
+                tenKhachHang = customer.FullName,
+                soDienThoai = customer.Phone,
+                identityNumber = customer.IdentityNumber
             });
         }
 

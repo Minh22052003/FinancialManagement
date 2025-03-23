@@ -25,6 +25,8 @@ public partial class LoanAccount
 
     public DateOnly? DueDate { get; set; }
 
+    public int? SpecializedAccountId { get; set; }
+
     public virtual Customer Customer { get; set; } = null!;
 
     public virtual DepositAccount? LinkedDepositAccount { get; set; }
@@ -32,4 +34,6 @@ public partial class LoanAccount
     public virtual ICollection<LoanDocument> LoanDocuments { get; set; } = new List<LoanDocument>();
 
     public virtual ICollection<PaymentHistory> PaymentHistories { get; set; } = new List<PaymentHistory>();
+
+    public virtual SpecializedAccount? SpecializedAccount { get; set; }
 }
