@@ -2,9 +2,10 @@
 @{
     ViewData["Title"] = "Danh sách khách hàng";
 }
-<h2>Danh sách khách hàng</h2>
-<table class="table">
-    <thead>
+<h2 class="mb-4 fw-bold custom-title">Danh sách khách hàng</h2>
+
+<table class="table table-hover table-bordered shadow-sm rounded-3 overflow-hidden">
+    <thead class="custom-table-header text-center align-middle">
         <tr>
             <th>Mã KH</th>
             <th>Tên khách hàng</th>
@@ -14,7 +15,7 @@
             <th>Thao tác</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody class="align-middle">
         @foreach (var item in Model)
         {
             <tr id="row_@item.CustomerId">
@@ -23,9 +24,9 @@
                 <td>@item.IdentityNumber</td>
                 <td>@item.Address</td>
                 <td>@item.Phone</td>
-                <td>
-                    <a href="javascript:void(0)" class="btn btn-warning btn-sm" onclick="openEditModal(@item.CustomerId)">Sửa</a>
-                    <a href="javascript:void(0)" class="btn btn-danger btn-sm" onclick="openDeleteModal(@item.CustomerId)">Xóa</a>
+                <td class="text-center">
+                    <a href="javascript:void(0)" class="btn btn-sm btn-outline-primary" onclick="openEditModal(@item.CustomerId)">Sửa</a>
+                    <a href="javascript:void(0)" class="btn btn-sm btn-outline-danger" onclick="openDeleteModal(@item.CustomerId)">Xóa</a>
                 </td>
             </tr>
         }
@@ -35,10 +36,10 @@
 <!-- Modal Edit -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">Chỉnh sửa thông tin khách hàng</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <div class="modal-body">
                 <form id="editForm">
@@ -84,12 +85,12 @@
 <!-- Modal Delete -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content rounded-3 shadow">
             <div class="modal-header">
                 <h5 class="modal-title">Xác nhận xóa</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
-            <div class="modal-body" id="deleteModalBody">
+            <div class="modal-body text-center" id="deleteModalBody">
                 Bạn có chắc chắn muốn xóa khách hàng này không?
             </div>
             <div class="modal-footer" id="deleteModalFooter">
@@ -100,13 +101,13 @@
     </div>
 </div>
 
-<!-- Modal thông báo lỗi khi thiếu thông tin khi sửa (Hiển thị ở giữa màn hình) -->
+<!-- Modal thông báo lỗi -->
 <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content rounded-3 shadow">
             <div class="modal-header">
                 <h5 class="modal-title">Lỗi</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <div class="modal-body text-center">
                 <p id="errorMessage">Thiếu thông tin bắt buộc!</p>
@@ -118,13 +119,13 @@
     </div>
 </div>
 
-<!-- Modal Thông báo thành công (cho sửa) -->
+<!-- Modal Thông báo thành công -->
 <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content rounded-3 shadow">
             <div class="modal-header">
                 <h5 class="modal-title">Thông báo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <div class="modal-body text-center">
                 <p class="text-success" id="successMessage"></p>
@@ -160,7 +161,6 @@
 
     // Kiểm tra dữ liệu trong modal Edit trước khi lưu thay đổi
     function saveChanges() {
-        // Kiểm tra nếu tên khách hàng hoặc CMND/CCCD bị trống
         if ($('#editFullName').val().trim() === "" || $('#editIdentityNumber').val().trim() === "") {
             var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
             $('#errorMessage').text('Thiếu thông tin bắt buộc!');
@@ -188,10 +188,9 @@
         });
     }
 
-    // Mở modal Delete và reset lại nội dung modal Delete
+    // Mở modal Delete và reset nội dung
     function openDeleteModal(id) {
         deleteCustomerId = id;
-        // Reset lại nội dung modal Delete về mặc định
         $('#deleteModalBody').html("Bạn có chắc chắn muốn xóa khách hàng này không?");
         $('#deleteModalFooter').html(
             "<button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Hủy</button>" +
@@ -203,7 +202,6 @@
 
     // Gọi AJAX xóa khách hàng
     function deleteCustomer() {
-        // Kiểm tra xem dòng khách hàng có tồn tại hay không
         if (!$('#row_' + deleteCustomerId).length) {
             var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
             $('#errorMessage').text('Khách hàng này đã bị xóa!');
@@ -212,10 +210,8 @@
         }
         $.post('/Customer/Delete', { id: deleteCustomerId }, function (response) {
             if (response.success) {
-                // Hiển thị thông báo xóa thành công trong modal Delete
                 $('#deleteModalBody').html("<p class='text-success text-center'>Xóa thành công!</p>");
                 $('#deleteModalFooter').html("<button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Đóng</button>");
-                // Xóa dòng khách hàng khỏi bảng
                 $('#row_' + deleteCustomerId).remove();
             } else {
                 var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
@@ -225,3 +221,21 @@
         });
     }
 </script>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .custom-table-header {
+        background-color: #E6F0FF;
+    }
+
+        .custom-table-header th {
+            color: #0056b3;
+        }
+
+    .custom-title {
+        color: black !important;
+    }
+</style>
