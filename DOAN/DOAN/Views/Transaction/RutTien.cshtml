@@ -1,3 +1,186 @@
 ﻿@model DOAN.Views.Transaction.RutTienModel
 @{
+    ViewData["Title"] = "Rút tiền";
 }
+
+<h2 class="mt-3">Chọn loại giao dịch rút tiền</h2>
+<div class="mb-3">
+    <input type="radio" id="withdrawTT" name="withdrawOption" /> Rút tiền từ tài khoản thanh toán
+    <input type="radio" id="withdrawCD" name="withdrawOption" style="margin-left:20px;" /> Rút tiền từ tài khoản chuyên dụng
+</div>
+
+<!-- Form rút tiền từ tài khoản thanh toán -->
+<div id="formTT" style="display:none;">
+    <h5>Rút tiền từ tài khoản thanh toán</h5>
+    <div class="mb-3">
+        <label class="form-label">Số tài khoản:</label>
+        <input type="text" class="form-control" id="accountTT" placeholder="Nhập số tài khoản" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Tên người dùng:</label>
+        <input type="text" class="form-control" id="nameTT" placeholder="Thông tin tự động" readonly />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Số tiền rút:</label>
+        <input type="text" class="form-control" id="amountTT" placeholder="Nhập số tiền cần rút" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Chi nhánh:</label>
+        <input type="text" class="form-control" value="Binh Gia Branch" disabled />
+    </div>
+    <button class="btn btn-danger" id="confirmTT">Xác nhận rút tiền</button>
+</div>
+
+<!-- Form rút tiền từ tài khoản chuyên dụng -->
+<div id="formCD" style="display:none;">
+    <h5>Rút tiền từ tài khoản chuyên dụng</h5>
+    <div class="mb-3">
+        <label class="form-label">Số tài khoản:</label>
+        <input type="text" class="form-control" id="accountCD" placeholder="Nhập số tài khoản" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Tên người dùng:</label>
+        <input type="text" class="form-control" id="nameCD" placeholder="Thông tin tự động" readonly />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Số tiền rút:</label>
+        <input type="text" class="form-control" id="amountCD" placeholder="Nhập số tiền cần rút" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Chi nhánh:</label>
+        <input type="text" class="form-control" value="Binh Gia Branch" disabled />
+    </div>
+    <button class="btn btn-danger" id="confirmCD">Xác nhận rút tiền</button>
+</div>
+
+<!-- Popup thông báo giao dịch thành công -->
+<div id="popup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+    background:white; border:1px solid #ccc; padding:20px; box-shadow:0 0 10px rgba(0,0,0,0.3); z-index:9999; text-align:center;">
+    <h5>Giao dịch thành công!</h5>
+    <p id="codeText"><strong>Mã giao dịch:</strong></p>
+    <p id="timeText"><strong>Thời gian giao dịch:</strong></p>
+    <button class="btn btn-secondary mt-2" onclick="closePopup()">Đóng</button>
+</div>
+<div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.5); z-index:9998;"></div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Hiển thị form dựa trên lựa chọn radio
+    $("#withdrawTT").on("change", function () {
+        $("#formTT").show();
+        $("#formCD").hide();
+    });
+    $("#withdrawCD").on("change", function () {
+        $("#formTT").hide();
+        $("#formCD").show();
+    });
+
+    // Lấy thông tin tên chủ tài khoản cho Deposit Account
+    $('#accountTT').on('change', function () {
+        var accountNumber = $(this).val();
+        if (accountNumber) {
+            $.get('/DepositAccount/GetByAccountNumber', { accountNumber: accountNumber }, function (data) {
+                if (data) {
+                    $('#nameTT').val(data.accountHolder);
+                } else {
+                    alert("Không tìm thấy thông tin tài khoản.");
+                    $('#nameTT').val('');
+                }
+            });
+        }
+    });
+    // Lấy thông tin tên chủ tài khoản cho Specialized Account
+    $('#accountCD').on('change', function () {
+        var accountNumber = $(this).val();
+        if (accountNumber) {
+            $.get('/Specialized/GetById', { id: accountNumber }, function (data) {
+                if (data) {
+                    $('#nameCD').val(data.accountHolder);
+                } else {
+                    alert("Không tìm thấy thông tin tài khoản.");
+                    $('#nameCD').val('');
+                }
+            });
+        }
+    });
+
+    function getCurrentDateTime() {
+        var now = new Date();
+        return now.toLocaleString("vi-VN");
+    }
+
+    // Xử lý rút tiền từ tài khoản thanh toán (Deposit Account)
+    $("#confirmTT").on("click", function () {
+        var accountNumber = $("#accountTT").val();
+        var name = $("#nameTT").val();
+        var amount = $("#amountTT").val();
+
+        if (!accountNumber || !name || !amount) {
+            alert("Vui lòng nhập đầy đủ thông tin.");
+            return;
+        }
+
+        var data = {
+            AccountType: "Deposit",
+            AccountNumber: accountNumber,
+            Amount: parseFloat(amount),
+            Transactor: name,
+        };
+
+        withdrawMoney(data);
+    });
+
+    // Xử lý rút tiền từ tài khoản chuyên dụng (Specialized Account)
+    $("#confirmCD").on("click", function () {
+        var accountNumber = $("#accountCD").val();
+        var name = $("#nameCD").val();
+        var amount = $("#amountCD").val();
+
+        if (!accountNumber || !name || !amount) {
+            alert("Vui lòng nhập đầy đủ thông tin.");
+            return;
+        }
+
+        var data = {
+            AccountType: "Specialized",
+            AccountHolder: name,
+            Amount: parseFloat(amount),
+            Transactor: name,
+        };
+
+        withdrawMoney(data);
+    });
+
+    function showPopup(code, time) {
+        $("#popup").show();
+        $("#overlay").show();
+        $("#codeText").html("<strong>Mã giao dịch:</strong> " + code);
+        $("#timeText").html("<strong>Thời gian giao dịch:</strong> " + getCurrentDateTime());
+    }
+
+    function closePopup() {
+        $("#popup").hide();
+        $("#overlay").hide();
+    }
+
+    async function withdrawMoney(data) {
+        try {
+            const response = await fetch('/Transaction/RutTien', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (response.ok && result.success) {
+                showPopup(result.transactionId, data.CreateTime);
+            } else {
+                alert(result.message || "Có lỗi xảy ra khi thực hiện giao dịch.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Có lỗi xảy ra khi thực hiện giao dịch.");
+        }
+    }
+</script>

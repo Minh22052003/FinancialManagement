@@ -14,6 +14,4 @@ public partial class PaymentHistory
     public DateTime PaymentDate { get; set; }
 
     public string? PaymentStatus { get; set; }
-
-    public virtual LoanAccount Loan { get; set; } = null!;
 }

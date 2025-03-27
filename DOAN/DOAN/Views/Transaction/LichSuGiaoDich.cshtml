@@ -1,0 +1,122 @@
+﻿@model IEnumerable<DOAN.Models.TransactionHistory>
+@{
+    ViewData["Title"] = "Lịch sử giao dịch";
+}
+<h2 class="mt-3">Lịch sử giao dịch</h2>
+
+<table class="table table-bordered mt-3">
+    <thead class="table-light text-center align-middle">
+        <tr>
+            <th>Mã giao dịch</th>
+            <th>Loại giao dịch</th>
+            <th>Số tài khoản</th>
+            <th>Người thực hiện</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            // Xác định loại giao dịch theo yêu cầu
+            var transactionType = item.SpecialAccountId != null
+            ? "Giao dịch tài khoản thanh toán khoản vay"
+            : "Giao dịch tài khoản tiền gửi thanh toán";
+            // Lấy số tài khoản: nếu có SpecializedAccount thì lấy AccountId, nếu không thì lấy AccountNumber từ DepositAccount
+            var accountNumber = item.SpecialAccountId != null
+            ? item.SpecialAccount.AccountId.ToString()
+            : (item.DepositAccount != null ? item.DepositAccount.AccountNumber : "");
+            // Lấy chủ tài khoản: nếu có SpecializedAccount thì lấy AccountHolder, nếu không thì lấy Transactor (đã được lưu khi giao dịch)
+            var accountHolder = item.SpecialAccountId != null
+            ? item.SpecialAccount.AccountHolder
+            : (item.DepositAccount != null ? item.Transactor : "");
+            // Lấy chi nhánh từ tài khoản liên quan (nếu có)
+            var branch = item.SpecialAccountId != null
+            ? item.SpecialAccount.Branch
+            : (item.DepositAccount != null ? item.DepositAccount.Branch : "");
+            // Format thời gian giao dịch
+            var transactionTime = item.TransactionDate.ToString("dd/MM/yyyy HH:mm");
+            // Format số tiền giao dịch
+            var amountFormatted = item.TransactionAmount.ToString("N0");
+            <tr>
+                <td class="text-center">@item.TransactionId</td>
+                <td class="text-center">@transactionType</td>
+                <td class="text-center">@accountNumber</td>
+                <td>@accountHolder</td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#detailModal"
+                            data-magiao="@item.TransactionId"
+                            data-loai="@transactionType"
+                            data-sotk="@accountNumber"
+                            data-ten="@accountHolder"
+                            data-sotien="@amountFormatted"
+                            data-chinhanh="@branch"
+                            data-thoigian="@transactionTime">
+                        Chi tiết
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal chi tiết giao dịch -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="detailModalLabel">Chi tiết giao dịch</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2"><strong>Mã giao dịch:</strong> <span id="modalMaGiaoDich"></span></div>
+                <div class="mb-2"><strong>Loại giao dịch:</strong> <span id="modalLoaiGiaoDich"></span></div>
+                <div class="mb-2"><strong>Số tài khoản:</strong> <span id="modalSoTaiKhoan"></span></div>
+                <div class="mb-2"><strong>Người thực hiện:</strong> <span id="modalTenNguoiDung"></span></div>
+                <div class="mb-2"><strong>Số tiền:</strong> <span id="modalSoTien"></span></div>
+                <div class="mb-2"><strong>Chi nhánh:</strong> <span id="modalChiNhanh"></span></div>
+                <div class="mb-2"><strong>Thời gian:</strong> <span id="modalThoiGian"></span></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var detailModal = document.getElementById('detailModal');
+        detailModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            document.getElementById('modalMaGiaoDich').innerText = button.getAttribute('data-magiao');
+            document.getElementById('modalLoaiGiaoDich').innerText = button.getAttribute('data-loai');
+            document.getElementById('modalSoTaiKhoan').innerText = button.getAttribute('data-sotk');
+            document.getElementById('modalTenNguoiDung').innerText = button.getAttribute('data-ten');
+            document.getElementById('modalSoTien').innerText = button.getAttribute('data-sotien');
+            document.getElementById('modalChiNhanh').innerText = button.getAttribute('data-chinhanh');
+            document.getElementById('modalThoiGian').innerText = button.getAttribute('data-thoigian');
+        });
+    });
+</script>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .custom-table-header {
+        background-color: #E6F0FF;
+    }
+
+        .custom-table-header th {
+            color: #0056b3;
+        }
+
+    .rounded-3 {
+        border-radius: 0.3rem !important;
+    }
+
+    .shadow {
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075) !important;
+    }
+</style>

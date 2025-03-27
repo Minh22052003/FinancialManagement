@@ -8,8 +8,26 @@
 
 <form asp-action="DangKyKhoanVay" method="post">
     <div class="form-group">
-        <label>Mã hồ sơ vay</label>
+        <label>Mã khoản vay</label>
         <input type="text" id="LoanId" name="LoanId" class="form-control" readonly>
+    </div>
+
+    <div class="form-group">
+        <label>Mã hồ sơ vay</label>
+        <!-- Cho phép người dùng nhập mã hồ sơ vay -->
+        <input type="text" id="LoanProfileId" name="LoanProfileId" class="form-control" required>
+    </div>
+
+    <div class="form-group">
+        <label>Tên khách hàng trên hồ sơ</label>
+        <!-- Hiển thị tên khách hàng được lấy từ hồ sơ -->
+        <input type="text" id="ProfileCustomerName" class="form-control" readonly>
+    </div>
+
+    <div class="form-group">
+        <label>Căn cước trên hồ sơ</label>
+        <!-- Hiển thị căn cước được lấy từ hồ sơ -->
+        <input type="text" id="ProfileCitizenId" class="form-control" readonly>
     </div>
 
     <div class="form-group">
@@ -73,7 +91,7 @@
 
         <div class="form-group">
             <label>Số tài khoản</label>
-            <input type="text" name="SpecialAccountNumber" class="form-control">
+            <input type="text" id="SpecialAccountNumber" name="SpecialAccountNumber" class="form-control" readonly>
         </div>
 
         <div class="form-group">
@@ -87,19 +105,26 @@
         </div>
     </div>
 
+
     <button type="submit" class="btn btn-primary mt-3">Tạo hồ sơ vay vốn</button>
 </form>
 
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Tạo mã hồ sơ vay tự động
+            // Tạo mã khoản vay tự động
             fetch('/Loan/GenerateLoanId')
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById("LoanId").value = data.loanId;
                 })
-                .catch(error => console.error('Lỗi khi tạo mã hồ sơ vay:', error));
+                .catch(error => console.error('Lỗi khi tạo mã khoản vay:', error));
+        fetch('/Loan/GenerateSpecializedAccountId')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("SpecialAccountNumber").value = data.specializedaccountid;
+            })
+            .catch(error => console.error('Lỗi khi lấy mã tài khoản chuyên dụng:', error));
 
             // Set ngày hiện tại cho "Ngày vay"
             document.getElementById("LoanDate").value = new Date().toISOString().split('T')[0];
@@ -107,7 +132,6 @@
             // Xử lý khi thay đổi mã khách hàng để lấy thông tin khách hàng
             document.getElementById("CustomerId").addEventListener("change", function () {
                 let customerId = this.value;
-
                 fetch(`/Customer/GetThongTinByVay?maKH=${customerId}`)
                     .then(response => response.json())
                     .then(data => {
@@ -118,7 +142,6 @@
                             let hanMucToiDa = 0;
                             let laiSuat = 9.0; // Lãi suất mặc định
 
-                            // Kiểm tra khách hàng VIP (có chữ 'V' trong mã KH)
                             let isVIP = customerId.includes("V");
 
                             if (isVIP) {
@@ -131,14 +154,14 @@
                                 else if (data.soDu < 500000000) { hanMucToiDa = 300000000; }
                                 else if (data.soDu < 1000000000) { hanMucToiDa = 700000000; }
                                 else { hanMucToiDa = 1000000000; }
+                                laiSuat = 9.0;
                             }
 
-                            // Tính hạn mức gợi ý theo công thức
                             let hanMucGoiY = isVIP ? data.soDu * 1.2 : data.soDu * 0.8;
                             hanMucToiDa = Math.min(hanMucToiDa, hanMucGoiY);
 
                             document.getElementById("MaxLoanAmount").value = hanMucToiDa;
-                            document.getElementById("InterestRate").value = laiSuat.toFixed(1) + "%";
+                            document.getElementById("InterestRate").value = laiSuat;
                         }
                     })
                     .catch(error => console.error('Lỗi khi lấy thông tin khách hàng:', error));
@@ -149,23 +172,38 @@
             const specialAccountForm = document.getElementById("SpecialAccountForm");
 
             paymentMethodSelect.addEventListener("change", function () {
-                if (this.value === "Auto") {
-                    specialAccountForm.style.display = "block";
-                } else {
-                    specialAccountForm.style.display = "none";
-                }
+                specialAccountForm.style.display = this.value === "Auto" ? "block" : "none";
             });
 
             // Kiểm tra số tiền vay không vượt quá hạn mức khi nhập
             document.getElementById("LoanAmount").addEventListener("input", function () {
                 let loanAmount = parseFloat(this.value);
                 let maxLoanAmount = parseFloat(document.getElementById("MaxLoanAmount").value) || 0;
-
                 if (loanAmount > maxLoanAmount) {
                     alert("Số tiền vay không được vượt quá hạn mức tối đa!");
                     this.value = maxLoanAmount;
                 }
             });
+
+            document.getElementById("LoanProfileId").addEventListener("change", function () {
+            let loanProfileId = this.value.trim();
+            if (loanProfileId !== "") {
+                fetch(`/Loan/GetLoanProfileByID?loanProfileId=${loanProfileId}`)
+                    .then(response => response.json())
+                    .then(result => {
+                        console.log(result); // Kiểm tra dữ liệu trả về
+                        if (result.success && result.data && result.data.isApproved === "Đã phê duyệt") {
+                            document.getElementById("ProfileCustomerName").value = result.data.customerName;
+                            document.getElementById("ProfileCitizenId").value = result.data.citizenId;
+                        } else {
+                            alert("Hồ sơ không hợp lệ hoặc chưa được phê duyệt!");
+                            document.getElementById("ProfileCustomerName").value = "";
+                            document.getElementById("ProfileCitizenId").value = "";
+                        }
+                    })
+                    .catch(error => console.error("Lỗi khi lấy thông tin hồ sơ:", error));
+            }
+        });
 
         });
     </script>

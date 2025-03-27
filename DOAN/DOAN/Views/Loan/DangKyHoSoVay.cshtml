@@ -1,0 +1,97 @@
+﻿@model DOAN.Models.LoanProfile
+@{
+    ViewData["Title"] = "Đăng ký hồ sơ vay vốn";
+}
+<h2 class="mb-4 fw-bold text-dark text-center">Đăng ký hồ sơ vay vốn</h2>
+
+<form id="loanForm" asp-action="DangKyHoSoVay" method="post" class="p-4 rounded shadow-sm bg-white border border-2 border-primary-subtle">
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label asp-for="ProfileId" class="form-label fw-semibold">
+                Mã hồ sơ <span class="text-danger">*</span>
+            </label>
+            <input asp-for="ProfileId" class="form-control form-control-sm" required />
+            <span asp-validation-for="ProfileId" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="CustomerName" class="form-label fw-semibold">
+                Tên khách hàng <span class="text-danger">*</span>
+            </label>
+            <input asp-for="CustomerName" class="form-control form-control-sm" required />
+            <span asp-validation-for="CustomerName" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="CitizenId" class="form-label fw-semibold">
+                CCCD/CMND/Hộ chiếu <span class="text-danger">*</span>
+            </label>
+            <input asp-for="CitizenId" class="form-control form-control-sm" required />
+            <span asp-validation-for="CitizenId" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Notes" class="form-label fw-semibold">
+            Ghi chú giấy tờ đã nộp
+        </label>
+        <textarea asp-for="Notes" class="form-control form-control-sm" rows="3" placeholder="VD: Đủ giấy đề nghị vay, HĐLĐ, bảng lương..."></textarea>
+        <span asp-validation-for="Notes" class="text-danger"></span>
+    </div>
+
+    <div class="text-end">
+        <button type="submit" class="btn btn-primary px-4 fw-bold">Đăng ký hồ sơ</button>
+    </div>
+</form>
+
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-success">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold" id="successModalLabel">🎉 Thành công</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="fw-semibold mb-0">Đăng ký hồ sơ thành công!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    form {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    h2 {
+        color: #333;
+    }
+
+    .form-label {
+        color: #0056b3;
+    }
+
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004080;
+        }
+</style>
+<script>
+    document.getElementById('loanForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var form = this;
+        var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+        setTimeout(function () {
+            form.submit();
+        }, 1500);
+    });
+</script>

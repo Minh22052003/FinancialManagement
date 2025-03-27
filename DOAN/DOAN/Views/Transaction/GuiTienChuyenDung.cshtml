@@ -1,0 +1,114 @@
+﻿@model DOAN.Models.TransactionHistory
+@{
+    ViewData["Title"] = "Gửi tiền vào tài khoản chuyên dụng";
+}
+<h2 class="mt-3">Gửi tiền vào tài khoản chuyên dụng</h2>
+
+<!-- Form giao dịch -->
+<form id="transactionForm" asp-action="GuiTienChuyenDung" method="post">
+    <!-- Số tài khoản chuyên dụng -->
+    <div class="mb-3">
+        <label class="form-label">Số tài khoản:</label>
+        <input type="number" class="form-control" id="specialAccountId" name="SpecialAccountId" required />
+    </div>
+    <!-- Thông tin tài khoản chuyên dụng được load qua AJAX -->
+    <div class="mb-3">
+        <label class="form-label">Tên người dùng:</label>
+        <input type="text" class="form-control" id="accountHolder" readonly />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Loại tài khoản:</label>
+        <input type="text" class="form-control" id="accountType" readonly />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Chi nhánh:</label>
+        <input type="text" class="form-control" id="branch" readonly />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Số dư hiện tại:</label>
+        <input type="number" class="form-control" id="balanceSpecial" readonly />
+    </div>
+    <!-- Số tiền giao dịch -->
+    <div class="mb-3">
+        <label class="form-label">Số tiền:</label>
+        <input type="number" step="0.01" class="form-control" id="transactionAmount" name="TransactionAmount" required />
+    </div>
+    <!-- Các trường ẩn cho giao dịch -->
+    <input type="hidden" name="Transactor" id="transactor" />
+    <input type="hidden" name="TransactionDate" id="transactionDate" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" />
+    <input type="hidden" name="TransactionStatus" value="Completed" />
+    <button type="submit" class="btn btn-primary" id="confirmTransaction">Xác nhận gửi tiền</button>
+</form>
+
+<!-- Popup thông báo -->
+<div id="popup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+    background:white; border:1px solid #ccc; padding:20px; box-shadow:0 0 10px rgba(0,0,0,0.3); z-index:9999; text-align:center;">
+    <h5>Giao dịch thành công!</h5>
+    <p id="codeText"><strong>Mã giao dịch:</strong></p>
+    <p id="timeText"><strong>Thời gian giao dịch:</strong></p>
+    <button class="btn btn-secondary mt-2" onclick="closePopup()" style="margin-top:15px;">Đóng</button>
+</div>
+<div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.5); z-index:9998;"></div>
+
+<!-- jQuery (nếu chưa có) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Khi số tài khoản thay đổi, lấy thông tin từ bảng SpecializedAccount
+    $('#specialAccountId').on('change', function () {
+        var accountId = $(this).val();
+        if (accountId) {
+            // Gọi endpoint từ SpecializedController (route: /Specialized/GetById)
+            $.get('/Specialized/GetById', { id: accountId }, function (data) {
+                if (data) {
+                    $('#accountHolder').val(data.accountHolder);
+                    $('#accountType').val(data.accountType);
+                    $('#branch').val(data.branch);
+                    $('#balanceSpecial').val(data.balance);
+                    // Gán tên người gửi là tên chủ tài khoản (có thể điều chỉnh nếu cần)
+                    $('#transactor').val(data.accountHolder);
+                } else {
+                    alert("Không tìm thấy thông tin tài khoản chuyên dụng!");
+                    $('#accountHolder').val('');
+                    $('#accountType').val('');
+                    $('#branch').val('');
+                    $('#balanceSpecial').val('');
+                }
+            });
+        }
+    });
+
+    // Khi form được submit, gửi dữ liệu qua AJAX
+    $('#transactionForm').on('submit', function (e) {
+        e.preventDefault();
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function (response) {
+                if (response.success) {
+                    var now = new Date();
+                    var timeString = now.toLocaleString('vi-VN');
+                    showPopup(response.transactionId, timeString);
+                } else {
+                    alert("Có lỗi xảy ra: " + response.message);
+                }
+            },
+            error: function () {
+                alert("Có lỗi xảy ra khi thực hiện giao dịch.");
+            }
+        });
+    });
+
+    function showPopup(code, timeString) {
+        $('#codeText').html("<strong>Mã giao dịch:</strong> " + code);
+        $('#timeText').html("<strong>Thời gian giao dịch:</strong> " + timeString);
+        $('#popup').show();
+        $('#overlay').show();
+    }
+
+    function closePopup() {
+        $('#popup').hide();
+        $('#overlay').hide();
+    }
+</script>

@@ -149,18 +149,36 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Quản lý khoản vay</a>
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Quản lý hồ sơ vay vốn</a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" asp-controller="Loan" asp-action="DangKyKhoanVay">Đăng ký khoản vay</a></li>
-                            <li><a class="dropdown-item" asp-controller="Loan" asp-action="DanhSachKhoanVay">Danh sách khoản vay</a></li>
-                            <li><a class="dropdown-item" asp-controller="Loan" asp-action="LichSuTraNo">Lịch sử trả nợ</a></li>
+                            <li><a class="dropdown-item" asp-controller="Loan" asp-action="DangKyHoSoVay">Đăng ký hồ sơ vay vốn</a></li>
+                            <li><a class="dropdown-item" asp-controller="Loan" asp-action="DanhSachHoSoChuaPheDuyet">Danh sách hồ sơ vay vốn chưa phê duyệt</a></li>
+                            <li><a class="dropdown-item" asp-controller="Loan" asp-action="DanhSachHoSoDaPheDuyet">Danh sách hồ sơ vay vốn đã phê duyệt và từ chối</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Quản lý khoản vay</a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" asp-controller="Loan" asp-action="DangKyKhoanVay">Đăng ký khoản vay</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Loan" asp-action="DanhSachKhoanVayChuaGiaiNgan">Khoản vay chưa giải ngân</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Loan" asp-action="DanhSachKhoanVayDaGiaiNgan">Khoản vay đã giải ngân</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Loan" asp-action="LichSuTraNo">Lịch sử trả nợ</a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Báo cáo & Thống kê</a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" asp-controller="Reports" asp-action="BaoCaoDanhSachKhoanVay">Báo cáo danh sách khoản vay</a></li>
-                            <li><a class="dropdown-item" asp-controller="Reports" asp-action="BaoCaoKhoanVayDenHan">Báo cáo khoản vay đến hạn</a></li>
+                            <li><a class="dropdown-item" asp-controller="Reports" asp-action="BaoCaoDanhSachTaikhoanVay">Báo cáo danh sách khoản vay</a></li>
+                            <li><a class="dropdown-item" asp-controller="Reports" asp-action="BaoCaoTaiKhoanNoDenHan">Báo cáo khoản vay đến hạn</a></li>
                             <li><a class="dropdown-item" asp-controller="Reports" asp-action="BaoCaoTaiKhoanTienGui">Báo cáo tài khoản tiền gửi</a></li>
                         </ul>
                     </li>

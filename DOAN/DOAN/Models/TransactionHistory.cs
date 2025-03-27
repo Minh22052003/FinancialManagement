@@ -9,7 +9,7 @@ public partial class TransactionHistory
 
     public int? DepositAccountId { get; set; }
 
-    public int? SpecialAccountId { get; set; }
+    public string? SpecialAccountId { get; set; }
 
     public decimal TransactionAmount { get; set; }
 

@@ -20,7 +20,7 @@
         @foreach (var item in Model)
         {
             <tr>
-                <td>@item.IdentityNumber</td>
+                <td>@item.AccountNumber</td>
                 <td>@item.CustomerName</td>
                 <td>@item.AccountType</td>
                 <td>@item.OpenDate.ToString("dd/MM/yyyy")</td>
@@ -30,7 +30,7 @@
                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#detailsModal"
                             data-name="@item.CustomerName"
                             data-phone="@item.PhoneNumber"
-                            data-id="@item.IdentityNumber"
+                            data-id="@item.AccountNumber"
                             data-type="@item.AccountType"
                             data-open="@item.OpenDate.ToString("dd/MM/yyyy")"
                             data-deposit="@item.InitialDeposit.ToString("N0")"

@@ -5,7 +5,7 @@ namespace DOAN.Models;
 
 public partial class LoanAccount
 {
-    public int LoanId { get; set; }
+    public string LoanId { get; set; } = null!;
 
     public string CustomerId { get; set; } = null!;
 
@@ -25,15 +25,15 @@ public partial class LoanAccount
 
     public DateOnly? DueDate { get; set; }
 
-    public int? SpecializedAccountId { get; set; }
+    public string? SpecializedAccountId { get; set; }
+
+    public string? LoanProfileId { get; set; }
+
+    public string? DisbursementStatus { get; set; }
 
     public virtual Customer Customer { get; set; } = null!;
 
     public virtual DepositAccount? LinkedDepositAccount { get; set; }
-
-    public virtual ICollection<LoanDocument> LoanDocuments { get; set; } = new List<LoanDocument>();
-
-    public virtual ICollection<PaymentHistory> PaymentHistories { get; set; } = new List<PaymentHistory>();
 
     public virtual SpecializedAccount? SpecializedAccount { get; set; }
 }

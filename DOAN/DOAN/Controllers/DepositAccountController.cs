@@ -2,6 +2,7 @@
 using DOAN.Models;
 using DOAN.ViewModel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace DOAN.Controllers
 {
@@ -13,6 +14,35 @@ namespace DOAN.Controllers
         {
             this._context = _context;
         }
+
+        [HttpGet]
+        public IActionResult GetByAccountNumber(string accountNumber)
+        {
+            if (string.IsNullOrEmpty(accountNumber))
+            {
+                return Json(null);
+            }
+
+            // Tìm DepositAccount theo AccountNumber và Include thông tin Customer
+            var depositAccount = _context.DepositAccounts
+                .Include(a => a.Customer)
+                .FirstOrDefault(a => a.AccountNumber == accountNumber);
+
+            if (depositAccount == null)
+            {
+                return Json(null);
+            }
+
+            return Json(new
+            {
+                accountHolder = depositAccount.Customer.FullName,
+                accountType = depositAccount.AccountType,
+                branch = depositAccount.Branch,
+                balance = depositAccount.Balance
+            });
+        }
+
+
         [HttpGet]
         public IActionResult MoTaiKhoanTienGui()
         {
@@ -76,7 +106,7 @@ namespace DOAN.Controllers
 
                     var specialized = new SpecializedAccount
                     {
-                        AccountId = model.AccountNumberDeposit, // Lấy giá trị từ view
+                        AccountId = model.AccountNumberDeposit.ToString(), // Lấy giá trị từ view
                         AccountHolder = model.AccountHolderDeposit, // Lấy từ form nhập tên chủ tài khoản chuyên dụng
                         Balance = 0, // Số dư ban đầu là 0
                         AccountType = "NhanLai",
@@ -92,7 +122,7 @@ namespace DOAN.Controllers
                     _context.SaveChanges();
 
                     // Nếu bạn muốn trả về id tài khoản chuyên dụng về view (ví dụ hiển thị thông báo), có thể gán:
-                    model.AccountNumberDeposit = specialized.AccountId;
+                    model.AccountNumberDeposit = int.Parse(specialized.AccountId);
                 }
 
                 return RedirectToAction("DanhSachTaiKhoanTienGui");
@@ -152,7 +182,7 @@ namespace DOAN.Controllers
                          {
                              CustomerName = customer.FullName,
                              PhoneNumber = customer.Phone,
-                             IdentityNumber = customer.IdentityNumber,
+                             AccountNumber = account.AccountNumber,
                              AccountType = account.AccountType,
                              Term = account.Term,
                              OpenDate = account.CreatedAt,
@@ -164,8 +194,7 @@ namespace DOAN.Controllers
             return View(model);
         }
 
-
-
+        
 
     }
 }

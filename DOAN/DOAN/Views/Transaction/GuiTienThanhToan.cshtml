@@ -1,6 +1,6 @@
-﻿@model DOAN.Views.Transaction.GuiTienThanhToanModel
+﻿@model DOAN.Models.TransactionHistory
 @{
-	ViewData["Title"] = "Gửi tiền vào tài khoản thanh toán";
+    ViewData["Title"] = "Gửi tiền vào tài khoản thanh toán";
 }
 
 <h2 class="mt-3">Chọn loại giao dịch</h2>
@@ -8,41 +8,43 @@
     <input type="radio" id="sendSelf" name="sendOption" /> Gửi tiền vào tài khoản của chính mình
     <input type="radio" id="sendOthers" name="sendOption" style="margin-left:20px;" /> Gửi tiền vào tài khoản của khách hàng khác
 </div>
+
 <!-- Form gửi tiền vào tài khoản chính mình -->
 <div id="formSelf" style="display:none;">
-    <h5>Gửi tiền vào tài khoản thanh toán</h5>
+    <h5>Gửi tiền vào tài khoản của chính mình</h5>
     <div class="mb-3">
         <label class="form-label">Số tài khoản (nhận tiền):</label>
-        <input type="text" class="form-control" id="accountSelf" />
+        <input type="text" class="form-control" id="accountSelf" placeholder="Nhập Account Number" required />
     </div>
     <div class="mb-3">
         <label class="form-label">Chủ tài khoản:</label>
-        <input type="text" class="form-control" id="senderSelf" />
+        <input type="text" class="form-control" id="senderSelf" placeholder="Thông tin tự động" readonly />
     </div>
     <div class="mb-3">
         <label class="form-label">Số tiền gửi:</label>
-        <input type="text" class="form-control" id="amountSelf" />
+        <input type="text" class="form-control" id="amountSelf" placeholder="Nhập số tiền" required />
     </div>
     <button class="btn btn-primary" id="confirmSelf">Xác nhận gửi tiền</button>
 </div>
+
 <!-- Form gửi tiền vào tài khoản khách hàng khác -->
 <div id="formOthers" style="display:none;">
     <h5>Gửi tiền vào tài khoản của khách hàng khác</h5>
     <div class="mb-3">
         <label class="form-label">Số tài khoản (nhận tiền):</label>
-        <input type="text" class="form-control" id="accountOther" />
+        <input type="text" class="form-control" id="accountOther" placeholder="Nhập Account Number" required />
     </div>
     <div class="mb-3">
         <label class="form-label">Chủ tài khoản:</label>
-        <input type="text" class="form-control" id="receiverOther" />
+        <input type="text" class="form-control" id="receiverOther" placeholder="Thông tin tự động" readonly />
     </div>
     <div class="mb-3">
         <label class="form-label">Người gửi:</label>
-        <input type="text" class="form-control" id="senderOther" />
+        <input type="text" class="form-control" id="senderOther" placeholder="Nhập tên người gửi" required />
     </div>
     <div class="mb-3">
         <label class="form-label">Số tiền gửi:</label>
-        <input type="text" class="form-control" id="amountOther" />
+        <input type="text" class="form-control" id="amountOther" placeholder="Nhập số tiền" required />
     </div>
     <button class="btn btn-primary" id="confirmOther">Xác nhận gửi tiền</button>
 </div>
@@ -57,41 +59,115 @@
 <div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
     background:rgba(0,0,0,0.5); z-index:9998;"></div>
 
+<!-- jQuery (nếu chưa có) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    // Hiển thị form theo lựa chọn radio
     document.getElementById("sendSelf").addEventListener("change", function () {
         document.getElementById("formSelf").style.display = "block";
         document.getElementById("formOthers").style.display = "none";
     });
-
     document.getElementById("sendOthers").addEventListener("change", function () {
         document.getElementById("formSelf").style.display = "none";
         document.getElementById("formOthers").style.display = "block";
     });
 
+    // Khi nhập số tài khoản ở formSelf, lấy thông tin chủ tài khoản qua AJAX
+    $('#accountSelf').on('change', function () {
+        var accountNumber = $(this).val();
+        if (accountNumber) {
+            // Giả sử endpoint API trả về JSON cho tài khoản tiền gửi theo AccountNumber
+            $.get('/DepositAccount/GetByAccountNumber', { accountNumber: accountNumber }, function (data) {
+                if (data) {
+                    $('#senderSelf').val(data.accountHolder);
+                } else {
+                    alert("Không tìm thấy thông tin tài khoản.");
+                    $('#senderSelf').val('');
+                }
+            });
+        }
+    });
+
+    // Khi nhập số tài khoản ở formOthers, lấy thông tin chủ tài khoản qua AJAX
+    $('#accountOther').on('change', function () {
+        var accountNumber = $(this).val();
+        if (accountNumber) {
+            $.get('/DepositAccount/GetByAccountNumber', { accountNumber: accountNumber }, function (data) {
+                if (data) {
+                    $('#receiverOther').val(data.accountHolder);
+                } else {
+                    alert("Không tìm thấy thông tin tài khoản.");
+                    $('#receiverOther').val('');
+                }
+            });
+        }
+    });
+
+    // Xử lý gửi giao dịch qua AJAX (ví dụ gửi qua endpoint /Transaction/DepositMoney)
+    async function depositMoney(data) {
+        try {
+            const response = await fetch('/Transaction/GuiTienThanhToan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (response.ok && result.success) {
+                showPopup(result.transactionId);
+            } else {
+                alert(result.message || "Có lỗi xảy ra khi thực hiện giao dịch.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Có lỗi xảy ra khi thực hiện giao dịch.");
+        }
+    }
+
+    // Giao dịch gửi tiền vào tài khoản của chính mình
+    document.getElementById("confirmSelf").addEventListener("click", function () {
+        const accountNumber = document.getElementById("accountSelf").value;
+        const sender = document.getElementById("senderSelf").value;
+        const amount = document.getElementById("amountSelf").value;
+        if (!accountNumber || !sender || !amount) {
+            alert("Vui lòng nhập đầy đủ thông tin.");
+            return;
+        }
+        const requestData = {
+            AccountNumber: accountNumber,
+            SenderName: sender,
+            Amount: parseFloat(amount)
+            // Với giao dịch gửi chính mình, ReceiverName có thể không cần thiết
+        };
+        depositMoney(requestData);
+    });
+
+    // Giao dịch gửi tiền vào tài khoản khách hàng khác
+    document.getElementById("confirmOther").addEventListener("click", function () {
+        const accountNumber = document.getElementById("accountOther").value;
+        const receiver = document.getElementById("receiverOther").value;
+        const sender = document.getElementById("senderOther").value;
+        const amount = document.getElementById("amountOther").value;
+        if (!accountNumber || !receiver || !sender || !amount) {
+            alert("Vui lòng nhập đầy đủ thông tin.");
+            return;
+        }
+        const requestData = {
+            AccountNumber: accountNumber,
+            ReceiverName: receiver,
+            SenderName: sender,
+            Amount: parseFloat(amount)
+        };
+        depositMoney(requestData);
+    });
+
     function showPopup(code) {
-         document.getElementById("popup").style.display = "block";
-         document.getElementById("overlay").style.display = "block";
-         document.getElementById("codeText").innerHTML = "<strong>Mã giao dịch:</strong> " + code;
-     }
+        document.getElementById("popup").style.display = "block";
+        document.getElementById("overlay").style.display = "block";
+        document.getElementById("codeText").innerHTML = "<strong>Mã giao dịch:</strong> " + code;
+    }
 
-     function closePopup() {
-         document.getElementById("popup").style.display = "none";
-         document.getElementById("overlay").style.display = "none";
-     }
-
-     document.getElementById("confirmSelf").addEventListener("click", function () {
-         const code = ""; 
-         showPopup(code);
-     });
-
-     document.getElementById("confirmOther").addEventListener("click", function () {
-         const code = ""; 
-         showPopup(code);
-     });
+    function closePopup() {
+        document.getElementById("popup").style.display = "none";
+        document.getElementById("overlay").style.display = "none";
+    }
 </script>
-
-
-
-
-
-

@@ -16,7 +16,7 @@ namespace DOAN.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            var customers = _context.Customers.ToList();
+            var customers = _context.Customers.Where(x=>x.Status == "Active").ToList();
             var customerDtos = customers.Select(customer => new Customer_DTO
             {
                 CustomerId = customer.CustomerId,
@@ -150,19 +150,23 @@ namespace DOAN.Controllers
             return Json(new { success = false });
         }
 
-        // Xóa khách hàng (trả về JSON)
-        [HttpPost]
-        public IActionResult Delete(string id)
-        {
-            var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == id);
-            if (customer == null)
-            {
-                return Json(new { success = false });
-            }
-            _context.Customers.Remove(customer);
-            _context.SaveChanges();
-            return Json(new { success = true });
-        }
+// Xóa khách hàng (thay vì xóa, chuyển trạng thái về Inactive và trả về JSON)
+[HttpPost]
+public IActionResult Delete(string id)
+{
+    var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == id);
+    if (customer == null)
+    {
+        return Json(new { success = false });
+    }
+    
+    // Thay vì xóa, cập nhật trạng thái thành "Inactive"
+    customer.Status = "Inactive";  // hoặc nếu trong model là Status, dùng customer.Status
+    _context.SaveChanges();
+    
+    return Json(new { success = true });
+}
+
 
         // API lấy thông tin khách hàng theo mã khách hàng (CustomerId)
         [HttpGet]

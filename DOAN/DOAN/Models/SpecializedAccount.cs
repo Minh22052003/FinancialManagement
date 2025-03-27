@@ -5,7 +5,7 @@ namespace DOAN.Models;
 
 public partial class SpecializedAccount
 {
-    public int AccountId { get; set; }
+    public string AccountId { get; set; } = null!;
 
     public string AccountHolder { get; set; } = null!;
 

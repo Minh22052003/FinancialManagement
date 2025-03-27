@@ -25,7 +25,7 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
     public virtual DbSet<LoanAccount> LoanAccounts { get; set; }
 
-    public virtual DbSet<LoanDocument> LoanDocuments { get; set; }
+    public virtual DbSet<LoanProfile> LoanProfiles { get; set; }
 
     public virtual DbSet<PaymentHistory> PaymentHistories { get; set; }
 
@@ -98,6 +98,10 @@ public partial class HeThongTaiChinhDbContext : DbContext
                 .HasMaxLength(20)
                 .IsUnicode(false)
                 .HasColumnName("phone");
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .HasDefaultValue("Active")
+                .HasColumnName("status");
         });
 
         modelBuilder.Entity<DepositAccount>(entity =>
@@ -132,7 +136,9 @@ public partial class HeThongTaiChinhDbContext : DbContext
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("interest_rate");
             entity.Property(e => e.MaturityDate).HasColumnName("maturity_date");
-            entity.Property(e => e.SpecializedAccountId).HasColumnName("SpecializedAccountID");
+            entity.Property(e => e.SpecializedAccountId)
+                .HasMaxLength(50)
+                .HasColumnName("SpecializedAccountID");
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
                 .IsUnicode(false)
@@ -190,9 +196,14 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
         modelBuilder.Entity<LoanAccount>(entity =>
         {
-            entity.HasKey(e => e.LoanId).HasName("PK__LoanAcco__A1F7955431CB2F7E");
+            entity.HasKey(e => e.LoanId);
 
-            entity.Property(e => e.LoanId).HasColumnName("loan_id");
+            entity.HasIndex(e => e.CustomerId, "IX_LoanAccounts");
+
+            entity.Property(e => e.LoanId)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("loan_id");
             entity.Property(e => e.ApprovedAmount)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("approved_amount");
@@ -203,6 +214,9 @@ public partial class HeThongTaiChinhDbContext : DbContext
             entity.Property(e => e.CustomerId)
                 .HasMaxLength(100)
                 .HasColumnName("customer_id");
+            entity.Property(e => e.DisbursementStatus)
+                .HasMaxLength(50)
+                .HasColumnName("disbursement_status");
             entity.Property(e => e.DueDate).HasColumnName("due_date");
             entity.Property(e => e.InterestRate)
                 .HasColumnType("decimal(5, 2)")
@@ -211,15 +225,18 @@ public partial class HeThongTaiChinhDbContext : DbContext
             entity.Property(e => e.LoanAmount)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("loan_amount");
-            entity.Property(e => e.LoanStatus)
+            entity.Property(e => e.LoanProfileId)
                 .HasMaxLength(50)
-                .IsUnicode(false)
+                .HasColumnName("LoanProfileID");
+            entity.Property(e => e.LoanStatus)
+                .HasMaxLength(250)
                 .HasColumnName("loan_status");
             entity.Property(e => e.PaymentMethod)
                 .HasMaxLength(50)
-                .IsUnicode(false)
                 .HasColumnName("payment_method");
-            entity.Property(e => e.SpecializedAccountId).HasColumnName("specialized_account_id");
+            entity.Property(e => e.SpecializedAccountId)
+                .HasMaxLength(50)
+                .HasColumnName("specialized_account_id");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.LoanAccounts)
                 .HasForeignKey(d => d.CustomerId)
@@ -235,24 +252,22 @@ public partial class HeThongTaiChinhDbContext : DbContext
                 .HasConstraintName("FK_LoanAccounts_SpecializedAccounts");
         });
 
-        modelBuilder.Entity<LoanDocument>(entity =>
+        modelBuilder.Entity<LoanProfile>(entity =>
         {
-            entity.HasKey(e => e.DocumentId).HasName("PK__LoanDocu__9666E8AC0AB62B5C");
+            entity.HasKey(e => e.ProfileId).HasName("PK__LoanProf__290C888483C04338");
 
-            entity.Property(e => e.DocumentId).HasColumnName("document_id");
-            entity.Property(e => e.DocumentDetails)
-                .HasMaxLength(255)
-                .HasColumnName("document_details");
-            entity.Property(e => e.LoanId).HasColumnName("loan_id");
-            entity.Property(e => e.SubmittedDate)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("submitted_date");
+            entity.ToTable("LoanProfile");
 
-            entity.HasOne(d => d.Loan).WithMany(p => p.LoanDocuments)
-                .HasForeignKey(d => d.LoanId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_LoanDocuments_LoanAccounts");
+            entity.Property(e => e.ProfileId)
+                .HasMaxLength(50)
+                .HasColumnName("ProfileID");
+            entity.Property(e => e.CitizenId)
+                .HasMaxLength(50)
+                .HasColumnName("CitizenID");
+            entity.Property(e => e.CustomerName).HasMaxLength(100);
+            entity.Property(e => e.IsApproved)
+                .HasMaxLength(50)
+                .HasDefaultValueSql("((0))");
         });
 
         modelBuilder.Entity<PaymentHistory>(entity =>
@@ -274,18 +289,13 @@ public partial class HeThongTaiChinhDbContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("payment_status");
-
-            entity.HasOne(d => d.Loan).WithMany(p => p.PaymentHistories)
-                .HasForeignKey(d => d.LoanId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PaymentHistory_LoanAccounts");
         });
 
         modelBuilder.Entity<SpecializedAccount>(entity =>
         {
             entity.HasKey(e => e.AccountId).HasName("PK__Speciali__349DA5A6772B2DCC");
 
-            entity.Property(e => e.AccountId).ValueGeneratedNever();
+            entity.Property(e => e.AccountId).HasMaxLength(50);
             entity.Property(e => e.AccountHolder).HasMaxLength(255);
             entity.Property(e => e.AccountType).HasMaxLength(50);
             entity.Property(e => e.Balance).HasColumnType("decimal(18, 2)");
@@ -299,6 +309,7 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
             entity.ToTable("TransactionHistory");
 
+            entity.Property(e => e.SpecialAccountId).HasMaxLength(50);
             entity.Property(e => e.TransactionAmount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TransactionDate)
                 .HasDefaultValueSql("(getdate())")

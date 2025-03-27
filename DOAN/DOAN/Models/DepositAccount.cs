@@ -27,7 +27,7 @@ public partial class DepositAccount
 
     public string? Branch { get; set; }
 
-    public int? SpecializedAccountId { get; set; }
+    public string? SpecializedAccountId { get; set; }
 
     public virtual Customer Customer { get; set; } = null!;
 

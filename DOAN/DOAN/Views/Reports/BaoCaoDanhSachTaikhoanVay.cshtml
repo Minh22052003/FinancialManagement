@@ -1,0 +1,43 @@
+﻿@model List<DOAN.Models.LoanAccount>
+
+@{
+    ViewData["Title"] = "Báo cáo danh sách tài khoản vay";
+    // Lấy ngày hiện tại để so sánh
+    var currentDate = DateTime.Now.Date;
+}
+
+<h2>@ViewData["Title"]</h2>
+<a href="@Url.Action("ExportToPdfAllNo", "Reports")" class="btn btn-primary">Xuất PDF</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Mã khoản vay</th>
+            <th>Tên khách hàng</th>
+            <th>Số tiền vay</th>
+            <th>Ngày giải ngân</th>
+            <th>Tình trạng</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            // Nếu DueDate có giá trị, chuyển sang DateTime để so sánh, nếu không hiển thị "Chưa xác định"
+            DateTime? dueDate = item.DueDate.HasValue
+            ? item.DueDate.Value.ToDateTime(new TimeOnly(0, 0))
+            : null;
+            var status = "Chưa đến hạn";
+            if (dueDate.HasValue)
+            {
+                status = currentDate > dueDate.Value.Date ? "Đến hạn" : "Chưa đến hạn";
+            }
+            <tr>
+                <td>@item.LoanId</td>
+                <td>@(item.Customer != null ? item.Customer.FullName : "Không có dữ liệu")</td>
+                <td>@item.LoanAmount.ToString("N2")</td>
+                <td>@(dueDate.HasValue ? dueDate.Value.ToString("dd/MM/yyyy") : "Chưa xác định")</td>
+                <td>@status</td>
+            </tr>
+        }
+    </tbody>
+</table>
