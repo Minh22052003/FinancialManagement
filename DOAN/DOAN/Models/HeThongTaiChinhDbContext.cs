@@ -117,7 +117,6 @@ public partial class HeThongTaiChinhDbContext : DbContext
                 .HasColumnName("account_number");
             entity.Property(e => e.AccountType)
                 .HasMaxLength(50)
-                .IsUnicode(false)
                 .HasColumnName("account_type");
             entity.Property(e => e.Balance)
                 .HasColumnType("decimal(18, 2)")

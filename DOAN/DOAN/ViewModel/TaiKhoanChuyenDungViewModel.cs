@@ -8,23 +8,23 @@ namespace DOAN.ViewModel
         // Thông tin khách hàng
         [Required(ErrorMessage = "Tên khách hàng không được để trống")]
         [Display(Name = "Tên khách hàng")]
-        public string CustomerName { get; set; }
+        public string? CustomerName { get; set; }
 
         [Required(ErrorMessage = "Số điện thoại không được để trống")]
         [Display(Name = "Số điện thoại")]
-        public string PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
 
         [Required(ErrorMessage = "CMND/CCCD/Hộ chiếu không được để trống")]
         [Display(Name = "CMND/CCCD/Hộ chiếu")]
-        public string IdentityNumber { get; set; }
+        public string? IdentityNumber { get; set; }
 
         // Thông tin tài khoản tiền gửi
         [Display(Name = "Chi nhánh")]
-        public string Branch { get; set; } = "Bình Gia Branch";
+        public string? Branch { get; set; } = "Bình Gia Branch";
 
         [Required(ErrorMessage = "Loại tiền gửi không được để trống")]
         [Display(Name = "Loại tiền gửi")]
-        public string AccountType { get; set; }
+        public string? AccountType { get; set; }
 
         [Display(Name = "Thời gian gửi (tháng)")]
         public int? Term { get; set; }  // tính bằng tháng
@@ -46,13 +46,13 @@ namespace DOAN.ViewModel
 
         // Thông tin bổ sung cho tài khoản chuyên dụng (nếu cần)
         [Display(Name = "Phương thức nhận lãi")]
-        public string InterestReceiveMethod { get; set; }  // ví dụ: "taquay" hoặc "mochuyendung"
+        public string? InterestReceiveMethod { get; set; }  // ví dụ: "taquay" hoặc "mochuyendung"
 
 
         [Display(Name = "Chủ tài khoản nhận lãi")]
-        public string AccountHolderDeposit { get; set; }     // Tên của chủ tài khoản chuyên dụng
+        public string? AccountHolderDeposit { get; set; }     // Tên của chủ tài khoản chuyên dụng
 
         [Display(Name = "Số tài khoản nhận lãi")]
-        public int AccountNumberDeposit { get; set; }       // (Tùy chọn: được tạo bởi JS)
+        public int? AccountNumberDeposit { get; set; }       // (Tùy chọn: được tạo bởi JS)
     }
 }

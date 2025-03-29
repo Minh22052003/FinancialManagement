@@ -16,6 +16,8 @@ namespace DOAN.Controllers
         // GET: /Account/Login
         public IActionResult Login()
         {
+            // Xóa toàn bộ session khi vào trang đăng nhập
+            HttpContext.Session.Clear();
             return View();
         }
 

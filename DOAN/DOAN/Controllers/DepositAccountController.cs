@@ -109,7 +109,7 @@ namespace DOAN.Controllers
                         AccountId = model.AccountNumberDeposit.ToString(), // Lấy giá trị từ view
                         AccountHolder = model.AccountHolderDeposit, // Lấy từ form nhập tên chủ tài khoản chuyên dụng
                         Balance = 0, // Số dư ban đầu là 0
-                        AccountType = "NhanLai",
+                        AccountType = "Tài khoản chuyên dụng nhận lãi gửi",
                         Branch = model.Branch,
                         CreateAt = DateTime.Now
                     };

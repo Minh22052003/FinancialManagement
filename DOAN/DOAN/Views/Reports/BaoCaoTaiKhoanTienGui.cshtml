@@ -4,18 +4,18 @@
     ViewData["Title"] = "Báo cáo danh sách tài khoản tiền gửi";
 }
 
-<h2>Báo cáo danh sách tài khoản tiền gửi</h2>
-<a href="@Url.Action("ExportToPdf", "Reports")" class="btn btn-primary">Xuất PDF</a>
+<h2 class="mb-4 fw-bold">Báo cáo danh sách tài khoản tiền gửi</h2>
+<a href="@Url.Action("ExportToPdf", "Reports")" class="btn btn-primary mb-3">Xuất PDF</a>
 
-<table class="table">
-    <thead>
+<table class="table table-hover table-bordered shadow-sm rounded-3 overflow-hidden">
+    <thead class="custom-table-header text-center align-middle">
         <tr>
             <th>Mã tài khoản</th>
             <th>Tên khách hàng</th>
             <th>Số dư</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody class="align-middle">
         @foreach (var item in Model)
         {
             <tr>
@@ -26,3 +26,22 @@
         }
     </tbody>
 </table>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .custom-table-header {
+        background-color: #E6F0FF;
+    }
+
+        .custom-table-header th {
+            color: #0056b3;
+        }
+
+    .table {
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 123, 255, 0.1);
+    }
+</style>

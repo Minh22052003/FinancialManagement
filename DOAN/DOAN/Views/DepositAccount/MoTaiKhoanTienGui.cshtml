@@ -38,9 +38,9 @@
         <label asp-for="AccountType">Loại tiền gửi:</label>
         <select asp-for="AccountType" class="form-control" id="accountType" onchange="toggleAccountFields()">
             <option value="">-- Chọn loại tài khoản --</option>
-            <option value="cokyhan">Tiết kiệm có kỳ hạn</option>
-            <option value="khongkyhan">Tiết kiệm không kỳ hạn</option>
-            <option value="thanhtoan">Thanh toán</option>
+            <option value="Tiết kiệm có kỳ hạn">Tiết kiệm có kỳ hạn</option>
+            <option value="Tiết kiệm không kỳ hạn">Tiết kiệm không kỳ hạn</option>
+            <option value="Thanh toán">Thanh toán</option>
         </select>
         <span asp-validation-for="AccountType" class="text-danger"></span>
     </div>
@@ -71,7 +71,7 @@
 
         <div class="form-group">
             <label for="accountHolderDeposit">Chủ tài khoản</label>
-            <input type="text" id="accountHolderDeposit" name="AccountHolderDeposit" class="form-control" placeholder="Nhập tên chủ tài khoản" required>
+            <input type="text" id="accountHolderDeposit" name="AccountHolderDeposit" class="form-control" placeholder="Nhập tên chủ tài khoản" readonly>
         </div>
     </div>
 
@@ -106,7 +106,7 @@
             var interestMethodField = document.getElementById("interestMethodField");
             var depositForm = document.getElementById("depositAccountForm");
 
-            if (accountType === "cokyhan") {
+            if (accountType === "Tiết kiệm có kỳ hạn") {
                 termField.style.display = "block";
                 interestMethodField.style.display = "block";
             } else {
