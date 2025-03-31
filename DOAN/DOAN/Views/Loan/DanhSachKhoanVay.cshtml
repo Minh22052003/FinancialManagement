@@ -13,7 +13,8 @@
             <th>Mã khoản vay</th>
             <th>Số tiền vay</th>
             <th>Thời gian vay (tháng)</th>
-            <th>Ngày giải ngân</th>
+            <th>Ngày tạo</th>
+            <th>Trạng thái</th>
             <th class="text-center">Thao tác</th>
         </tr>
     </thead>
@@ -27,12 +28,13 @@
                 + (item.DueDate.Value.Month - item.CreatedAt.Month);
             }
             <tr data-interestrate="@(item.InterestRate.HasValue ? item.InterestRate.Value.ToString("N2") : "")"
-                data-loanstatus="@item.DisbursementStatus"
+                data-loanstatus="@item.LoanStatus"
                 data-paymentmethod="@item.PaymentMethod">
                 <td>@item.LoanId</td>
                 <td>@item.LoanAmount.ToString("N0")</td>
                 <td>@loanTerm</td>
                 <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                <td>@item.LoanStatus</td>
                 <td class="d-flex justify-content-center align-items-center">
                     <button class="btn btn-info btn-sm" onclick="openModal(this)">Xem chi tiết</button>
                     <button class="btn btn-warning btn-sm ms-2" onclick="openUpdateModal(this)">Cập nhật</button>
@@ -70,7 +72,7 @@
                     <td><input type="text" id="disbursementDateDetail" disabled /></td>
                 </tr>
                 <tr>
-                    <th>Trạng thái giải ngân</th>
+                    <th>Trạng thái</th>
                     <td><input type="text" id="loanStatusDetail" disabled /></td>
                 </tr>
                 <tr>
@@ -107,7 +109,7 @@
                 </select>
             </div>
             <div class="mb-3">
-                <label for="disbursementDateUpdate" class="form-label">Ngày giải ngân</label>
+                <label for="disbursementDateUpdate" class="form-label">Ngày tạo</label>
                 <input type="text" class="form-control" id="disbursementDateUpdate" disabled>
             </div>
             <div class="mb-3">
@@ -115,11 +117,10 @@
                 <input type="number" class="form-control" id="interestRateUpdate">
             </div>
             <div class="mb-3">
-                <label for="loanStatusUpdate" class="form-label">Trạng thái khoản vay</label>
+                <label for="loanStatusUpdate" class="form-label">Trạng thái</label>
                 <select class="form-control" id="loanStatusUpdate">
-                    <option value="Đang trả">Đang trả</option>
-                    <option value="Đã tất toán">Đã tất toán</option>
-                    <option value="Đã quá hạn">Đã quá hạn</option>
+                    <option value="Chờ giải ngân">Chờ giải ngân</option>
+                    <option value="Đã giải ngân">Đã giải ngân</option>
                 </select>
             </div>
             <div class="mb-3">
@@ -136,7 +137,6 @@
 
 @section Styles {
     <style>
-        /* Modal styles */
         .modal {
             display: none;
             position: fixed;
@@ -227,11 +227,12 @@
             var loanTerm = cells[2].textContent.trim();
             var disbursementDate = cells[3].textContent.trim();
 
+            // Lấy giá trị từ data attributes (LoanStatus lấy từ LoanStatus)
             var interestRate = row.getAttribute("data-interestrate");
-            var disbursementStatus = row.getAttribute("data-loanstatus");
+            var loanStatus = row.getAttribute("data-loanstatus"); // LoanStatus: "Chờ giải ngân" hoặc "Đã giải ngân"
             var paymentMethod = row.getAttribute("data-paymentmethod");
 
-            // Xử lý hiển thị cho phương thức thanh toán:
+            // Chuyển đổi phương thức thanh toán
             var paymentMethodText = (paymentMethod === "Auto") ? "Từ tài khoản chuyên dụng" :
                                       (paymentMethod === "Counter") ? "Nộp tiền tại quầy" : paymentMethod;
 
@@ -240,7 +241,7 @@
             document.getElementById("loanTermDetail").value = loanTerm;
             document.getElementById("disbursementDateDetail").value = disbursementDate;
             document.getElementById("interestRateDetail").value = interestRate;
-            document.getElementById("loanStatusDetail").value = disbursementStatus;
+            document.getElementById("loanStatusDetail").value = loanStatus;
             document.getElementById("paymentMethodDetail").value = paymentMethodText;
 
             document.getElementById("detailsModal").style.display = "block";
@@ -257,7 +258,7 @@
             var disbursementDate = cells[3].textContent.trim();
 
             var interestRate = row.getAttribute("data-interestrate");
-            var disbursementStatus = row.getAttribute("data-loanstatus");
+            var loanStatus = row.getAttribute("data-loanstatus"); // LoanStatus: "Chờ giải ngân" hoặc "Đã giải ngân"
             var paymentMethod = row.getAttribute("data-paymentmethod");
 
             document.getElementById("loanCodeUpdate").value = loanCode;
@@ -265,7 +266,7 @@
             document.getElementById("loanTermUpdate").value = loanTerm;
             document.getElementById("disbursementDateUpdate").value = disbursementDate;
             document.getElementById("interestRateUpdate").value = interestRate;
-            document.getElementById("loanStatusUpdate").value = disbursementStatus;
+            document.getElementById("loanStatusUpdate").value = loanStatus;
             document.getElementById("paymentTypeUpdate").value = paymentMethod;
 
             document.getElementById("updateModal").style.display = "block";
@@ -284,7 +285,7 @@
                 LoanAmount: parseFloat(document.getElementById("loanAmountUpdate").value),
                 LoanTerm: parseInt(document.getElementById("loanTermUpdate").value),
                 InterestRate: parseFloat(document.getElementById("interestRateUpdate").value),
-                DisbursementStatus: document.getElementById("loanStatusUpdate").value,
+                LoanStatus: document.getElementById("loanStatusUpdate").value, // LoanStatus cập nhật từ select
                 PaymentMethod: document.getElementById("paymentTypeUpdate").value
             };
 

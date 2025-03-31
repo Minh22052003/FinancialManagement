@@ -227,7 +227,7 @@ namespace DOAN.Controllers
                     // Cập nhật lãi suất
                     loan.InterestRate = model.InterestRate;
                     // Cập nhật trạng thái giải ngân (DisbursementStatus) theo select (giá trị đã chọn)
-                    loan.DisbursementStatus = model.DisbursementStatus;
+                    loan.LoanStatus = model.LoanStatus;
                     // Cập nhật phương thức thanh toán
                     loan.PaymentMethod = model.PaymentMethod;
 
@@ -239,28 +239,28 @@ namespace DOAN.Controllers
             return BadRequest(ModelState);
         }
 
-        [HttpGet]
-        public IActionResult DanhSachKhoanVayChuaGiaiNgan()
-        {
-            var loanAccounts = _context.LoanAccounts
-                 .Include(l => l.Customer)
-                 .Where(l=>l.LoanStatus == "Chờ giải ngân")
-                 .ToList();
+        //[HttpGet]
+        //public IActionResult DanhSachKhoanVayChuaGiaiNgan()
+        //{
+        //    var loanAccounts = _context.LoanAccounts
+        //         .Include(l => l.Customer)
+        //         .Where(l=>l.LoanStatus == "Chờ giải ngân")
+        //         .ToList();
 
-            return View(loanAccounts);
-        }
+        //    return View(loanAccounts);
+        //}
 
 
-        [HttpGet]
-        public IActionResult DanhSachKhoanVayDaGiaiNgan()
-        {
-            var loanAccounts = _context.LoanAccounts
-                  .Include(l => l.Customer)
-                  .Where(l => l.LoanStatus == "Đã giải ngân")
-                  .ToList();
+        //[HttpGet]
+        //public IActionResult DanhSachKhoanVayDaGiaiNgan()
+        //{
+        //    var loanAccounts = _context.LoanAccounts
+        //          .Include(l => l.Customer)
+        //          .Where(l => l.LoanStatus == "Đã giải ngân")
+        //          .ToList();
 
-            return View(loanAccounts);
-        }
+        //    return View(loanAccounts);
+        //}
     }
 
 
@@ -269,11 +269,11 @@ namespace DOAN.Controllers
     // ViewModel dùng cho cập nhật
     public class LoanUpdateViewModel
     {
-        public string LoanId { get; set; }
+        public string? LoanId { get; set; }
         public decimal LoanAmount { get; set; }
         public int LoanTerm { get; set; } // số tháng vay
-        public decimal InterestRate { get; set; }
-        public string DisbursementStatus { get; set; }
-        public string PaymentMethod { get; set; }
+        public decimal? InterestRate { get; set; }
+        public string? LoanStatus { get; set; }
+        public string? PaymentMethod { get; set; }
     }
 }
