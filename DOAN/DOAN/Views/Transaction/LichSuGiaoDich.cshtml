@@ -11,6 +11,7 @@
             <th>Loại giao dịch</th>
             <th>Số tài khoản</th>
             <th>Người thực hiện</th>
+            <th>Mô tả</th>
             <th>Thao tác</th>
         </tr>
     </thead>
@@ -19,8 +20,8 @@
         {
             // Xác định loại giao dịch theo yêu cầu
             var transactionType = item.SpecialAccountId != null
-            ? "Giao dịch tài khoản thanh toán khoản vay"
-            : "Giao dịch tài khoản tiền gửi thanh toán";
+            ? "Giao dịch tài khoản chuyên dụng"
+            : "Giao dịch tài khoản tiền gửi";
             // Lấy số tài khoản: nếu có SpecializedAccount thì lấy AccountId, nếu không thì lấy AccountNumber từ DepositAccount
             var accountNumber = item.SpecialAccountId != null
             ? item.SpecialAccount.AccountId.ToString()
@@ -42,6 +43,7 @@
                 <td class="text-center">@transactionType</td>
                 <td class="text-center">@accountNumber</td>
                 <td>@accountHolder</td>
+                <td>@item.Description</td>
                 <td class="text-center">
                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#detailModal"
                             data-magiao="@item.TransactionId"

@@ -44,7 +44,8 @@ namespace DOAN.Controllers
                 TransactionAmount = request.Amount,
                 TransactionDate = DateTime.Now,
                 Transactor = request.SenderName,
-                TransactionStatus = "Completed"
+                TransactionStatus = "Completed",
+                Description = "Gửi tiền vào tài khoản thanh toán"
             };
 
             _context.TransactionHistories.Add(transaction);
@@ -94,7 +95,8 @@ namespace DOAN.Controllers
                     TransactionAmount = model.Amount,
                     TransactionDate = DateTime.Now,
                     Transactor = model.Transactor,
-                    TransactionStatus = "Success"
+                    TransactionStatus = "Success",
+                    Description = "Rút tiền từ tài khoản tiền gửi"
                 };
 
                 _context.TransactionHistories.Add(transaction);
@@ -129,7 +131,8 @@ namespace DOAN.Controllers
                     TransactionAmount = model.Amount,
                     TransactionDate = DateTime.Now,
                     Transactor = model.Transactor,
-                    TransactionStatus = "Success"
+                    TransactionStatus = "Success",
+                    Description = "Rút tiền từ tài khoản chuyên dụng "
                 };
 
                 _context.TransactionHistories.Add(transaction);
@@ -183,6 +186,7 @@ namespace DOAN.Controllers
                 model.Transactor = specialized.AccountHolder;
             }
             model.TransactionStatus = "Completed";
+            model.Description = "Gửi tiền vào tài khoản chuyên dụng";
 
             // Lưu giao dịch
             _context.TransactionHistories.Add(model);

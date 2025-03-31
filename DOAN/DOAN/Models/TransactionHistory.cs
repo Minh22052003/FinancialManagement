@@ -19,6 +19,8 @@ public partial class TransactionHistory
 
     public string TransactionStatus { get; set; } = null!;
 
+    public string? Description { get; set; }
+
     public virtual DepositAccount? DepositAccount { get; set; }
 
     public virtual SpecializedAccount? SpecialAccount { get; set; }

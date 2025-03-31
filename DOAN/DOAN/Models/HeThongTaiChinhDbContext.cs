@@ -43,7 +43,7 @@ public partial class HeThongTaiChinhDbContext : DbContext
     {
         modelBuilder.Entity<ApprovalHistory>(entity =>
         {
-            entity.HasKey(e => e.ApprovalId).HasName("PK__Approval__C94AE61A964FD990");
+            entity.HasKey(e => e.ApprovalId).HasName("PK__Approval__C94AE61AF02F5213");
 
             entity.ToTable("ApprovalHistory");
 
@@ -157,7 +157,7 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
         modelBuilder.Entity<FinancialTransaction>(entity =>
         {
-            entity.HasKey(e => e.TransactionId).HasName("PK__Financia__85C600AF4D6EBC6B");
+            entity.HasKey(e => e.TransactionId).HasName("PK__Financia__85C600AF42E15ADE");
 
             entity.Property(e => e.TransactionId).HasColumnName("transaction_id");
             entity.Property(e => e.Amount)
@@ -271,7 +271,7 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
         modelBuilder.Entity<PaymentHistory>(entity =>
         {
-            entity.HasKey(e => e.PaymentId).HasName("PK__PaymentH__ED1FC9EA2AE15A4A");
+            entity.HasKey(e => e.PaymentId).HasName("PK__PaymentH__ED1FC9EA8C353296");
 
             entity.ToTable("PaymentHistory");
 
@@ -327,9 +327,9 @@ public partial class HeThongTaiChinhDbContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__B9BE370FA46127B7");
+            entity.HasKey(e => e.UserId).HasName("PK__Users__B9BE370F8591AD34");
 
-            entity.HasIndex(e => e.Username, "UQ__Users__F3DBC572509CA5EA").IsUnique();
+            entity.HasIndex(e => e.Username, "UQ__Users__F3DBC572247A31FC").IsUnique();
 
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.CreatedAt)
