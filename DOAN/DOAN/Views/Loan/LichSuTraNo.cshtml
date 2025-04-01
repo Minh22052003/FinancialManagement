@@ -1,8 +1,11 @@
-﻿@* @model DOAN.Views.Loan.LichSuTraNoModel *@
+﻿@model IEnumerable<DOAN.Models.LoanAccount>
+
 @{
     ViewData["Title"] = "Lịch sử trả nợ";
 }
-<h2>Lịch sử trả nợ</h2>
+
+<h2>@ViewData["Title"]</h2>
+
 <table class="table">
     <thead>
         <tr>
@@ -13,4 +16,20 @@
             <th>Trạng thái</th>
         </tr>
     </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            // Tính số tiền thanh toán: LoanAmount * (1 + InterestRate)
+            decimal paymentAmount = item.LoanAmount * (1 + (item.InterestRate ?? 0m));
+            string paymentMethodDisplay = item.PaymentMethod == "Auto" ? "Trừ tiền tài khoản giao dịch" :
+            item.PaymentMethod == "Counter" ? "Nộp tiền tại quầy" : item.PaymentMethod;
+            <tr>
+                <td>@item.LoanId</td>
+                <td>@(item.FullyPaidAt.HasValue ? item.FullyPaidAt.Value.ToString("dd/MM/yyyy") : "")</td>
+                <td>@paymentAmount.ToString("N0")</td>
+                <td>@paymentMethodDisplay</td>
+                <td>Hoàn thành</td>
+            </tr>
+        }
+    </tbody>
 </table>

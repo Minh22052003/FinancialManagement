@@ -155,7 +155,14 @@ namespace DOAN.Controllers
 
             return RedirectToAction("DanhSachKhoanVay");
         }
-        public IActionResult LichSuTraNo() => View();
+        public IActionResult LichSuTraNo()
+        {
+            var lichsutrano = _context.LoanAccounts
+                .Include(l => l.Customer)
+                .Where(l => l.IsFullyPaid == true)
+                .ToList();
+            return View(lichsutrano);
+        }
 
 
         [HttpGet]
@@ -231,6 +238,12 @@ namespace DOAN.Controllers
                     // Cập nhật phương thức thanh toán
                     loan.PaymentMethod = model.PaymentMethod;
 
+                    loan.IsFullyPaid = model.IsFullyPaid;
+                    if (loan.IsFullyPaid)
+                    {
+                        loan.FullyPaidAt = DateTime.Now;
+                    }
+
                     _context.SaveChanges();
                     return Ok();
                 }
@@ -275,5 +288,6 @@ namespace DOAN.Controllers
         public decimal? InterestRate { get; set; }
         public string? LoanStatus { get; set; }
         public string? PaymentMethod { get; set; }
+        public bool IsFullyPaid { get; set; }
     }
 }

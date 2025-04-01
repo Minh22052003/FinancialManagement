@@ -217,9 +217,13 @@ public partial class HeThongTaiChinhDbContext : DbContext
                 .HasMaxLength(50)
                 .HasColumnName("disbursement_status");
             entity.Property(e => e.DueDate).HasColumnName("due_date");
+            entity.Property(e => e.FullyPaidAt)
+                .HasColumnType("datetime")
+                .HasColumnName("fully_paid_at");
             entity.Property(e => e.InterestRate)
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("interest_rate");
+            entity.Property(e => e.IsFullyPaid).HasColumnName("is_fully_paid");
             entity.Property(e => e.LinkedDepositAccountId).HasColumnName("linked_deposit_account_id");
             entity.Property(e => e.LoanAmount)
                 .HasColumnType("decimal(18, 2)")

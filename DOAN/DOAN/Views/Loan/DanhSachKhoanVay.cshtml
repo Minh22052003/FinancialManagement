@@ -15,6 +15,7 @@
             <th>Thời gian vay (tháng)</th>
             <th>Ngày tạo</th>
             <th>Trạng thái</th>
+            <th>Tình trạng trả nợ</th>
             <th class="text-center">Thao tác</th>
         </tr>
     </thead>
@@ -29,12 +30,16 @@
             }
             <tr data-interestrate="@(item.InterestRate.HasValue ? item.InterestRate.Value.ToString("N2") : "")"
                 data-loanstatus="@item.LoanStatus"
-                data-paymentmethod="@item.PaymentMethod">
+                data-paymentmethod="@item.PaymentMethod"
+                data-isfullypaid="@item.IsFullyPaid">
                 <td>@item.LoanId</td>
                 <td>@item.LoanAmount.ToString("N0")</td>
                 <td>@loanTerm</td>
                 <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
                 <td>@item.LoanStatus</td>
+                <td>
+                    @(item.IsFullyPaid ? "Đã trả nợ" : "Chưa trả nợ")
+                </td>
                 <td class="d-flex justify-content-center align-items-center">
                     <button class="btn btn-info btn-sm" onclick="openModal(this)">Xem chi tiết</button>
                     <button class="btn btn-warning btn-sm ms-2" onclick="openUpdateModal(this)">Cập nhật</button>
@@ -117,7 +122,7 @@
                 <input type="number" class="form-control" id="interestRateUpdate">
             </div>
             <div class="mb-3">
-                <label for="loanStatusUpdate" class="form-label">Trạng thái</label>
+                <label for="loanStatusUpdate" class="form-label">Trạng thái giải ngân</label>
                 <select class="form-control" id="loanStatusUpdate">
                     <option value="Chờ giải ngân">Chờ giải ngân</option>
                     <option value="Đã giải ngân">Đã giải ngân</option>
@@ -128,6 +133,13 @@
                 <select class="form-control" id="paymentTypeUpdate">
                     <option value="Counter">Nộp tiền tại quầy</option>
                     <option value="Auto">Từ tài khoản chuyên dụng</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="isFullyPaidUpdate" class="form-label">Tình trạng trả nợ</label>
+                <select class="form-control" id="isFullyPaidUpdate">
+                    <option value="false">Chưa trả nợ</option>
+                    <option value="true">Đã trả nợ</option>
                 </select>
             </div>
             <button type="button" class="btn btn-primary" onclick="updateLoan()">Cập nhật</button>
@@ -221,15 +233,13 @@
         function openModal(button) {
             var row = button.closest("tr");
             var cells = row.cells;
-
             var loanCode = cells[0].textContent.trim();
             var loanAmount = cells[1].textContent.trim();
             var loanTerm = cells[2].textContent.trim();
             var disbursementDate = cells[3].textContent.trim();
 
-            // Lấy giá trị từ data attributes (LoanStatus lấy từ LoanStatus)
             var interestRate = row.getAttribute("data-interestrate");
-            var loanStatus = row.getAttribute("data-loanstatus"); // LoanStatus: "Chờ giải ngân" hoặc "Đã giải ngân"
+            var loanStatus = row.getAttribute("data-loanstatus");
             var paymentMethod = row.getAttribute("data-paymentmethod");
 
             // Chuyển đổi phương thức thanh toán
@@ -243,7 +253,6 @@
             document.getElementById("interestRateDetail").value = interestRate;
             document.getElementById("loanStatusDetail").value = loanStatus;
             document.getElementById("paymentMethodDetail").value = paymentMethodText;
-
             document.getElementById("detailsModal").style.display = "block";
         }
 
@@ -251,15 +260,15 @@
         function openUpdateModal(button) {
             var row = button.closest("tr");
             var cells = row.cells;
-
             var loanCode = cells[0].textContent.trim();
             var loanAmount = cells[1].textContent.trim();
             var loanTerm = cells[2].textContent.trim();
             var disbursementDate = cells[3].textContent.trim();
 
             var interestRate = row.getAttribute("data-interestrate");
-            var loanStatus = row.getAttribute("data-loanstatus"); // LoanStatus: "Chờ giải ngân" hoặc "Đã giải ngân"
+            var loanStatus = row.getAttribute("data-loanstatus");
             var paymentMethod = row.getAttribute("data-paymentmethod");
+            var isFullyPaid = row.getAttribute("data-isfullypaid");
 
             document.getElementById("loanCodeUpdate").value = loanCode;
             document.getElementById("loanAmountUpdate").value = parseFloat(loanAmount.replace(/,/g, "")) || 0;
@@ -268,6 +277,7 @@
             document.getElementById("interestRateUpdate").value = interestRate;
             document.getElementById("loanStatusUpdate").value = loanStatus;
             document.getElementById("paymentTypeUpdate").value = paymentMethod;
+            document.getElementById("isFullyPaidUpdate").value = isFullyPaid;
 
             document.getElementById("updateModal").style.display = "block";
         }
@@ -285,8 +295,10 @@
                 LoanAmount: parseFloat(document.getElementById("loanAmountUpdate").value),
                 LoanTerm: parseInt(document.getElementById("loanTermUpdate").value),
                 InterestRate: parseFloat(document.getElementById("interestRateUpdate").value),
-                LoanStatus: document.getElementById("loanStatusUpdate").value, // LoanStatus cập nhật từ select
-                PaymentMethod: document.getElementById("paymentTypeUpdate").value
+                LoanStatus: document.getElementById("loanStatusUpdate").value,
+                PaymentMethod: document.getElementById("paymentTypeUpdate").value,
+                // Chuyển giá trị select về boolean cho IsFullyPaid
+                IsFullyPaid: document.getElementById("isFullyPaidUpdate").value === "true"
             };
 
             fetch('/Loan/UpdateLoan', {

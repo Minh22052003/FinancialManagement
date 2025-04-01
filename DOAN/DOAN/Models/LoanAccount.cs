@@ -31,6 +31,10 @@ public partial class LoanAccount
 
     public string? DisbursementStatus { get; set; }
 
+    public bool IsFullyPaid { get; set; }
+
+    public DateTime? FullyPaidAt { get; set; }
+
     public virtual Customer Customer { get; set; } = null!;
 
     public virtual DepositAccount? LinkedDepositAccount { get; set; }
