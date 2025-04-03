@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Đăng ký hồ sơ vay vốn";
 }
+
 <h2 class="mb-4 fw-bold text-dark text-center">Đăng ký hồ sơ vay vốn</h2>
 
 <form id="loanForm" asp-action="DangKyHoSoVay" method="post" class="p-4 rounded shadow-sm bg-white border border-2 border-primary-subtle">
@@ -10,7 +11,7 @@
             <label asp-for="ProfileId" class="form-label fw-semibold">
                 Mã hồ sơ <span class="text-danger">*</span>
             </label>
-            <input asp-for="ProfileId" class="form-control form-control-sm" required />
+            <input asp-for="ProfileId" id="ProfileId" class="form-control form-control-sm" required readonly />
             <span asp-validation-for="ProfileId" class="text-danger"></span>
         </div>
         <div class="col-md-4">
@@ -85,11 +86,25 @@
             border-color: #004080;
         }
 </style>
+
 <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        fetch('/Loan/GenerateLoanProfileIdNext')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("ProfileId").value = data.profileid;
+            console.log(data.ProfileId)
+        })
+        .catch(error => console.error("Lỗi khi lấy mã hồ sơ:", error));
+
+    });
+
+
     document.getElementById('loanForm').addEventListener('submit', function (e) {
         e.preventDefault();
         var form = this;
         var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+        successModal.show();
         setTimeout(function () {
             form.submit();
         }, 1500);

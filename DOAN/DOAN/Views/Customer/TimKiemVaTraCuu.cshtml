@@ -6,11 +6,16 @@
 
 <h2>Tìm kiếm khách hàng</h2>
 
-<form method="get">
+<form method="get" onsubmit="return validateSearch()">
     <div class="form-group">
         <label for="searchKeyword">Nhập thông tin khách hàng</label>
         <input type="text" id="searchKeyword" name="searchKeyword" class="form-control"
-               placeholder="Nhập tên, CMND/CCCD/Hộ chiếu hoặc số điện thoại" value="@Context.Request.Query["searchKeyword"]">
+               placeholder="Nhập tên, CMND/CCCD/Hộ chiếu hoặc số điện thoại"
+               value="@Context.Request.Query["searchKeyword"]"
+               style="margin-bottom: 10px;">
+        <div id="errorMessage" style="color: red; display: none; margin-top: 5px;">
+            Vui lòng nhập thông tin tìm kiếm!
+        </div>
     </div>
     <button type="submit" class="btn btn-primary">Tìm kiếm</button>
 </form>
@@ -42,4 +47,20 @@
             }
         </tbody>
     </table>
+}
+@section Scripts {
+    <script>
+        function validateSearch() {
+            var searchKeyword = document.getElementById("searchKeyword").value.trim();
+            var errorMessage = document.getElementById("errorMessage");
+
+            if (searchKeyword === "") {
+                errorMessage.style.display = "block"; // Hiển thị thông báo lỗi
+                return false; // Ngăn form gửi đi
+            } else {
+                errorMessage.style.display = "none"; // Ẩn thông báo lỗi
+                return true; // Cho phép form gửi đi
+            }
+        }
+    </script>
 }

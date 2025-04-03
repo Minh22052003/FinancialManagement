@@ -2,7 +2,7 @@
 {
     public class Customer_DTO
     {
-        public string CustomerId { get; set; }
+        public string? CustomerId { get; set; }
         public string FullName { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public string Address { get; set; }

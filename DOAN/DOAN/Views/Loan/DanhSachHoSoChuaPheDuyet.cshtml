@@ -128,39 +128,60 @@
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<!-- Modal Xác nhận -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Xác nhận hành động</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body text-center" id="confirmModalBody">
+                Bạn có chắc chắn muốn thực hiện thao tác này không?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="confirmActionBtn">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    let actionType = ''; // "approve" hoặc "reject"
+    let selectedProfileId = ''; // Lưu ID hồ sơ khi mở modal
+
     $(document).ready(function () {
-        $('.approve-btn').click(function () {
-            var profileId = $(this).data('profile-id');
-            $.ajax({
-                url: '@Url.Action("Approve", "Loan")',
-                type: 'POST',
-                data: { profileId: profileId },
-                success: function (response) {
-                    showPopup(response.message, response.success ? 'success' : 'danger');
-                    if(response.success){
-                        // Reload trang hoặc cập nhật lại danh sách
-                        location.reload();
-                    }
-                }
-            });
+        $('.approve-btn, .reject-btn').click(function () {
+            selectedProfileId = $(this).data('profile-id'); // Lưu ProfileId
+            actionType = $(this).hasClass('approve-btn') ? 'approve' : 'reject'; // Xác định hành động
+
+            // Cập nhật nội dung trong Modal
+            let actionText = actionType === 'approve' ? 'phê duyệt' : 'từ chối';
+            $('#confirmModalBody').text(`Bạn có chắc chắn muốn ${actionText} hồ sơ này không?`);
+            $('#confirmModalLabel').text(`Xác nhận ${actionText}`);
+
+            // Mở Modal
+            $('#confirmModal').modal('show');
         });
 
-        $('.reject-btn').click(function () {
-            var profileId = $(this).data('profile-id');
+        // Xử lý khi bấm "Xác nhận"
+        $('#confirmActionBtn').click(function () {
+            let url = actionType === 'approve' ? '@Url.Action("Approve", "Loan")' : '@Url.Action("Reject", "Loan")';
+
             $.ajax({
-                url: '@Url.Action("Reject", "Loan")',
+                url: url,
                 type: 'POST',
-                data: { profileId: profileId },
+                data: { profileId: selectedProfileId },
                 success: function (response) {
+                    $('#confirmModal').modal('hide'); // Đóng modal
                     showPopup(response.message, response.success ? 'success' : 'danger');
-                    if(response.success){
-                        // Reload trang hoặc cập nhật lại danh sách
-                        location.reload();
+
+                    if (response.success) {
+                        location.reload(); // Tải lại trang nếu thành công
                     }
                 }
             });
         });
     });
 </script>
-

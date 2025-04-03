@@ -184,6 +184,7 @@ namespace DOAN.Controllers
                              PhoneNumber = customer.Phone,
                              AccountNumber = account.AccountNumber,
                              AccountType = account.AccountType,
+                             CitizenId = customer.IdentityNumber,
                              Term = account.Term,
                              OpenDate = account.CreatedAt,
                              InitialDeposit = account.Balance,

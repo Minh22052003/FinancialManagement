@@ -274,6 +274,33 @@ namespace DOAN.Controllers
 
         //    return View(loanAccounts);
         //}
+
+        [HttpGet]
+        public IActionResult GenerateLoanProfileIdNext()
+        {
+            try
+            {
+                var lastProfile = _context.LoanProfiles
+                    .OrderByDescending(l => l.ProfileId)
+                    .Select(l => l.ProfileId)
+                    .FirstOrDefault();
+
+                string nextProfileId = "LP0001";
+                if (!string.IsNullOrEmpty(lastProfile))
+                {
+                    int lastNumber = int.Parse(lastProfile.Substring(2));
+                    nextProfileId = $"LP{(lastNumber + 1):D4}";
+                }
+
+                return Json(new { profileid = nextProfileId });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = "Lỗi khi tạo mã hồ sơ", details = ex.Message });
+            }
+        }
+
+
     }
 
 

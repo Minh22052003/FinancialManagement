@@ -30,7 +30,7 @@
                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#detailsModal"
                             data-name="@item.CustomerName"
                             data-phone="@item.PhoneNumber"
-                            data-id="@item.AccountNumber"
+                            data-citizen-id="@item.CitizenId"
                             data-type="@item.AccountType"
                             data-open="@item.OpenDate.ToString("dd/MM/yyyy")"
                             data-deposit="@item.InitialDeposit.ToString("N0")"
@@ -54,7 +54,7 @@
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item"><strong>Tên khách hàng:</strong> <span id="modalCustomerName"></span></li>
                     <li class="list-group-item"><strong>Số điện thoại:</strong> <span id="modalPhoneNumber"></span></li>
-                    <li class="list-group-item"><strong>CCCD/CMND/Hộ chiếu:</strong> <span id="modalIdNumber"></span></li>
+                    <li class="list-group-item"><strong>CCCD/CMND/Hộ chiếu:</strong> <span id="modalCitizenId"></span></li>
                     <li class="list-group-item"><strong>Loại tiền gửi:</strong> <span id="modalAccountType"></span></li>
                     <li class="list-group-item"><strong>Ngày mở:</strong> <span id="modalOpenDate"></span></li>
                     <li class="list-group-item"><strong>Số tiền gửi ban đầu:</strong> <span id="modalInitialDeposit"></span> VND</li>
@@ -75,7 +75,7 @@
             var button = event.relatedTarget;
             document.getElementById('modalCustomerName').innerText = button.getAttribute('data-name');
             document.getElementById('modalPhoneNumber').innerText = button.getAttribute('data-phone');
-            document.getElementById('modalIdNumber').innerText = button.getAttribute('data-id');
+            document.getElementById('modalCitizenId').innerText = button.getAttribute('data-citizen-id');
             document.getElementById('modalAccountType').innerText = button.getAttribute('data-type');
             document.getElementById('modalOpenDate').innerText = button.getAttribute('data-open');
             document.getElementById('modalInitialDeposit').innerText = button.getAttribute('data-deposit');

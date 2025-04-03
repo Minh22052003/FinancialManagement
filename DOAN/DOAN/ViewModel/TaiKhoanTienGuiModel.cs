@@ -6,6 +6,7 @@
         public string? CustomerName { get; set; }
         public string? PhoneNumber { get; set; }
         public string? AccountNumber { get; set; }
+        public string? CitizenId { get; set; }
 
         // Thông tin tài khoản tiền gửi
         public string? AccountType { get; set; }
