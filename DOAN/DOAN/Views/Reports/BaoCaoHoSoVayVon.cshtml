@@ -1,0 +1,126 @@
+﻿@model List<DOAN.Models.LoanProfile>
+@{
+    ViewData["Title"] = "Báo cáo tổng hợp hồ sơ vay vốn";
+    var data = ViewBag.Data;
+}
+
+<h2 class="mb-4 fw-bold">Báo cáo tổng hợp hồ sơ vay vốn</h2>
+
+<form method="get" asp-action="BaoCaoHoSoVayVon" class="row g-3 mb-4">
+    <div class="col-md-3">
+        <label class="form-label">Tên khách hàng</label>
+        <input type="text" class="form-control" name="tenKhachHang" value="@ViewBag.TenKhachHang" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Trạng thái hồ sơ</label>
+        <select class="form-select" name="trangThai">
+            <option value="">-- Tất cả --</option>
+            @{
+                var trangThaiOptions = new[] { "Đang chờ", "Đã phê duyệt", "Từ chối" };
+                var selected = ViewBag.Status as string;
+            }
+
+            @foreach (var item in trangThaiOptions)
+            {
+                if (item == selected)
+                {
+                    <option value="@item" selected>@item</option>
+                }
+                else
+                {
+                    <option value="@item">@item</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Từ ngày tạo</label>
+        <input type="date" class="form-control" name="tuNgayTao" value="@ViewBag.TuNgayTao" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Đến ngày tạo</label>
+        <input type="date" class="form-control" name="denNgayTao" value="@ViewBag.DenNgayTao" />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Từ ngày phê duyệt</label>
+        <input type="date" class="form-control" name="tuNgayPheDuyet" value="@ViewBag.TuNgayPheDuyet" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Đến ngày phê duyệt</label>
+        <input type="date" class="form-control" name="denNgayPheDuyet" value="@ViewBag.DenNgayPheDuyet" />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Từ ngày từ chối</label>
+        <input type="date" class="form-control" name="tuNgayTuChoi" value="@ViewBag.TuNgayTuChoi" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Đến ngày từ chối</label>
+        <input type="date" class="form-control" name="denNgayTuChoi" value="@ViewBag.DenNgayTuChoi" />
+    </div>
+
+    <div class="col-12 mt-2">
+        <button type="submit" class="btn btn-primary">Lọc</button>
+        <a class="btn btn-danger mt-2" href="@Url.Action("ExportToPdfHoSoVayVon", "Reports", new {
+            tenKhachHang = ViewBag.TenKhachHang,
+            trangThai = ViewBag.Status,
+            tuNgayTao = ViewBag.TuNgayTao,
+            denNgayTao = ViewBag.DenNgayTao,
+            tuNgayPheDuyet = ViewBag.TuNgayPheDuyet,
+            denNgayPheDuyet = ViewBag.DenNgayPheDuyet,
+            tuNgayTuChoi = ViewBag.TuNgayTuChoi,
+            denNgayTuChoi = ViewBag.DenNgayTuChoi
+        })">Xuất PDF</a>
+
+
+    </div>
+</form>
+
+<table class="table table-bordered table-hover shadow-sm">
+    <thead class="table-light text-center align-middle">
+        <tr>
+            <th>Mã hồ sơ</th>
+            <th>Tên KH</th>
+            <th>Mã KH</th>
+            <th>Ngày tạo</th>
+            <th>Ngày phê duyệt</th>
+            <th>Ngày từ chối</th>
+            <th>Trạng thái</th>
+        </tr>
+    </thead>
+    <tbody class="align-middle">
+        @if (data != null && data.Count > 0)
+        {
+            foreach (var item in data)
+            {
+                <tr>
+                    <td>@item.ProfileId</td>
+                    <td>@item.CustomerName</td>
+                    <td>@item.CitizenId</td>
+                    <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    <td>@(item.ApprovedAt?.ToString("dd/MM/yyyy") ?? "-")</td>
+                    <td>@(item.RejectedAt?.ToString("dd/MM/yyyy") ?? "-")</td>
+                    <td>@item.TrangThai</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="8" class="text-center">Không có dữ liệu</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .table th, .table td {
+        vertical-align: middle;
+    }
+</style>

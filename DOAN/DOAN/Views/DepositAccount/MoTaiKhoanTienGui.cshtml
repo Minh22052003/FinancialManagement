@@ -4,7 +4,17 @@
 }
 <h2>Mở tài khoản tiền gửi</h2>
 
-<form asp-action="MoTaiKhoanTienGui" method="post">
+<div class="form-group">
+    <label>Trạng thái thông tin khách hàng:</label>
+    <div>
+        <input type="radio" id="hasInfo" name="customerInfoStatus" value="hasInfo" checked onchange="toggleCustomerInfo()">
+        <label for="hasInfo">Đã có thông tin</label>
+        <input type="radio" id="noInfo" name="customerInfoStatus" value="noInfo" onchange="toggleCustomerInfo()">
+        <label for="noInfo">Chưa có thông tin</label>
+    </div>
+</div>
+
+<form asp-action="MoTaiKhoanTienGui" method="post" id="openAccountForm">
     <div class="form-group">
         <label for="CustomerId">Mã khách hàng:</label>
         <input type="text" class="form-control" id="CustomerId" name="CustomerId" required />
@@ -27,6 +37,11 @@
         <input asp-for="IdentityNumber" class="form-control" id="idNumber" readonly />
         <span asp-validation-for="IdentityNumber" class="text-danger"></span>
     </div>
+    <div class="form-group">
+        <label asp-for="Address">Địa chỉ:</label>
+        <input asp-for="Address" class="form-control" id="address" readonly />
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
 
     <div class="form-group">
         <label>Chi nhánh:</label>
@@ -47,7 +62,7 @@
 
     <div class="form-group" id="termField" style="display: none;">
         <label asp-for="Term">Thời gian gửi (tháng):</label>
-        <input asp-for="Term" class="form-control" id="termInput" />
+        <input asp-for="Term" class="form-control" id="termInput" type="number" min="1" step="1" oninput="updateInterestRate()" />
         <span asp-validation-for="Term" class="text-danger"></span>
     </div>
 
@@ -59,25 +74,22 @@
         </select>
     </div>
 
-    <!-- Form tài khoản chuyên dụng nhận lãi -->
     <div id="depositAccountForm" style="display:none; border:1px solid #ccc; padding:15px; border-radius:8px;">
         <h4>Thông tin tài khoản nhận lãi từ tiền gửi</h4>
-
-        <!-- Sử dụng readonly thay vì disabled để giá trị được gửi lên server -->
         <div class="form-group">
             <label for="SpecializedAccountId">Số tài khoản</label>
-            <input type="text" id="SpecializedAccountId" asp-for="AccountNumberDeposit" class="form-control" placeholder="Nhập số tài khoản chuyên dụng">
+            <input type="text" id="SpecializedAccountId" asp-for="AccountNumberDeposit" class="form-control" placeholder="Nhập số tài khoản chuyên dụng" readonly>
         </div>
-
         <div class="form-group">
             <label for="accountHolderDeposit">Chủ tài khoản</label>
-            <input type="text" id="accountHolderDeposit" name="AccountHolderDeposit" class="form-control" placeholder="Nhập tên chủ tài khoản" readonly>
+            <input type="text" id="accountHolderDeposit" name="AccountHolderDeposit" class="form-control" placeholder="Nhập tên chủ tài khoản">
         </div>
     </div>
 
     <div class="form-group">
         <label asp-for="OpenDate">Ngày mở tài khoản:</label>
-        <input asp-for="OpenDate" type="date" class="form-control" id="openDate" />
+        <input asp-for="OpenDate" type="date" class="form-control" id="openDate"
+               value="@DateTime.Now.ToString("yyyy-MM-dd")" />
         <span asp-validation-for="OpenDate" class="text-danger"></span>
     </div>
 
@@ -89,30 +101,134 @@
 
     <div class="form-group">
         <label asp-for="InterestRate">Lãi suất tiền gửi (%):</label>
-        <input asp-for="InterestRate" type="number" class="form-control" id="interestRate" step="0.01" />
+        <input asp-for="InterestRate" type="number" class="form-control" id="interestRate" step="0.01"/>
         <span asp-validation-for="InterestRate" class="text-danger"></span>
     </div>
 
     <br />
     <button type="submit" class="btn btn-primary">Mở tài khoản</button>
 </form>
+<!-- Popup thông báo -->
+<div id="popup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+    background:white; border:1px solid #ccc; padding:20px; box-shadow:0 0 10px rgba(0,0,0,0.3); z-index:9999; text-align:left; width:350px;">
+    <h5 style="text-align:center;">🎉 Mở tài khoản thành công!</h5>
+    <hr />
+    <p><strong>Số tài khoản tiền gửi:</strong> <span id="depositAccountNumber"></span></p>
+    <p id="specializedAccountText" style="display:none;"><strong>Số tài khoản chuyên dụng:</strong> <span id="specializedAccountNumber"></span></p>
+    <p><strong>Thời gian mở:</strong> <span id="openDateTime"></span></p>
+    <div style="text-align:center;">
+        <button class="btn btn-secondary mt-2" onclick="closePopup()" style="margin-top:15px;">Đóng</button>
+    </div>
+</div>
+
+<div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.5); z-index:9998;"></div>
+
 
 @section Scripts {
     <script>
-        // Hiển thị/ẩn các trường dựa theo loại tài khoản
+        // Hàm tạo mã khách hàng bằng cách gọi API
+        async function generateCustomerId() {
+            const now = new Date();
+            const year = now.getFullYear().toString().slice(-2);
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const prefix = year + month;
+
+            try {
+                const response = await fetch('/Customer/GetCustomerCountInMonth');
+                if (!response.ok) throw new Error('Lỗi khi gọi API');
+                const data = await response.json();
+                const countInMonth = data.count;
+                const suffix = countInMonth.toString().padStart(2, '0');
+                return prefix + suffix;
+            } catch (error) {
+                console.error('Lỗi khi tạo mã khách hàng:', error);
+                return prefix + "01";
+            }
+        }
+
+        // Hàm xử lý toggle readonly và sinh mã khách hàng
+        async function toggleCustomerInfo() {
+            var hasInfo = document.getElementById("hasInfo").checked;
+            var customerId = document.getElementById("CustomerId");
+            var customerName = document.getElementById("customerName");
+            var phoneNumber = document.getElementById("phoneNumber");
+            var idNumber = document.getElementById("idNumber");
+            var address = document.getElementById("address"); // Thêm biến cho địa chỉ
+
+            if (hasInfo) {
+                customerId.removeAttribute("readonly");
+                customerName.setAttribute("readonly", "readonly");
+                phoneNumber.setAttribute("readonly", "readonly");
+                idNumber.setAttribute("readonly", "readonly");
+                address.setAttribute("readonly", "readonly"); // Thêm readonly cho địa chỉ
+                customerId.value = "";
+                customerName.value = "";
+                phoneNumber.value = "";
+                idNumber.value = "";
+                address.value = ""; // Xóa giá trị địa chỉ
+            } else {
+                customerId.setAttribute("readonly", "readonly");
+                customerName.removeAttribute("readonly");
+                phoneNumber.removeAttribute("readonly");
+                idNumber.removeAttribute("readonly");
+                address.removeAttribute("readonly"); // Bỏ readonly cho địa chỉ
+                customerId.value = await generateCustomerId();
+            }
+        }
+
+        // Hàm tính lãi suất dựa trên thời gian gửi
+        function calculateInterestRate(term) {
+            term = parseInt(term);
+            if (term >= 1 && term <= 2) return 2.2;
+            if (term >= 3 && term <= 5) return 2.5;
+            if (term >= 6 && term <= 11) return 3.5;
+            if (term >= 12 && term <= 18) return 4.7;
+            if (term >= 19 && term <= 24) return 4.8;
+            if (term > 24) {
+                const excessMonths = term - 24;
+                const additionalRate = Math.floor(excessMonths / 12) * 0.2;
+                return 4.8 + additionalRate;
+            }
+            return 0; // Mặc định nếu không khớp
+        }
+
+        // Hàm cập nhật lãi suất khi thay đổi thời gian gửi
+        function updateInterestRate() {
+            var term = document.getElementById("termInput").value;
+            var interestRateField = document.getElementById("interestRate");
+            if (term && parseInt(term) > 0) {
+                interestRateField.value = calculateInterestRate(term);
+            } else {
+                interestRateField.value = ""; // Xóa nếu không có giá trị hợp lệ
+            }
+        }
+
+        // Hiển thị/ẩn các trường và cập nhật lãi suất
         function toggleAccountFields() {
             var accountType = document.getElementById("accountType").value;
             var termField = document.getElementById("termField");
             var interestMethodField = document.getElementById("interestMethodField");
             var depositForm = document.getElementById("depositAccountForm");
+            var interestRateField = document.getElementById("interestRate");
 
             if (accountType === "Tiết kiệm có kỳ hạn") {
                 termField.style.display = "block";
                 interestMethodField.style.display = "block";
+                interestRateField.setAttribute("readonly", "readonly"); // Không cho nhập
+                updateInterestRate(); // Tự động tính lãi suất
+            } else if (accountType === "Tiết kiệm không kỳ hạn" || accountType === "Thanh toán") {
+                termField.style.display = "none";
+                interestMethodField.style.display = "none";
+                depositForm.style.display = "none";
+                interestRateField.setAttribute("readonly", "readonly");
+                interestRateField.value = "0.2"; 
             } else {
                 termField.style.display = "none";
                 interestMethodField.style.display = "none";
                 depositForm.style.display = "none";
+                interestRateField.removeAttribute("readonly"); // Cho phép nhập khi chưa chọn
+                interestRateField.value = "";
             }
         }
 
@@ -122,32 +238,73 @@
             var depositForm = document.getElementById("depositAccountForm");
             if (method === "mochuyendung") {
                 depositForm.style.display = "block";
-
-                // Giới hạn random trong phạm vi int (1,000,000,000 - 2,147,483,647)
                 var randomAccountNumber = Math.floor(1000000000 + Math.random() * (2147483647 - 1000000000 + 1));
-
                 document.getElementById("SpecializedAccountId").value = randomAccountNumber;
             } else {
                 depositForm.style.display = "none";
             }
         }
 
-
         // Khi nhập mã khách hàng, tự động lấy thông tin khách hàng từ API
         document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("CustomerId").addEventListener("change", function () {
                 let customerId = this.value;
-                fetch(`/Customer/GetThongTinByGui?maKH=${customerId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data) {
-                            document.getElementById("customerName").value = data.tenKhachHang;
-                            document.getElementById("phoneNumber").value = data.soDienThoai;
-                            document.getElementById("idNumber").value = data.identityNumber;
-                        }
-                    })
-                    .catch(error => console.error('Lỗi khi lấy thông tin khách hàng:', error));
+                var hasInfo = document.getElementById("hasInfo").checked;
+                if (hasInfo) {
+                    fetch(`/Customer/GetThongTinByGui?maKH=${customerId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data) {
+                                document.getElementById("customerName").value = data.tenKhachHang;
+                                document.getElementById("phoneNumber").value = data.soDienThoai;
+                                document.getElementById("idNumber").value = data.identityNumber;
+                                document.getElementById("address").value = data.address
+                            }
+                        })
+                        .catch(error => console.error('Lỗi khi lấy thông tin khách hàng:', error));
+                }
             });
         });
+        document.getElementById("openAccountForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            var formData = new FormData(this);
+
+            fetch('/DepositAccount/MoTaiKhoanTienGui', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById("depositAccountNumber").textContent = data.depositAccountNumber;
+                    document.getElementById("openDateTime").textContent = data.openDateTime;
+
+                    if (data.specializedAccountNumber) {
+                        document.getElementById("specializedAccountNumber").textContent = data.specializedAccountNumber;
+                        document.getElementById("specializedAccountText").style.display = "block";
+                    } else {
+                        document.getElementById("specializedAccountText").style.display = "none";
+                    }
+
+                    document.getElementById("popup").style.display = "block";
+                    document.getElementById("overlay").style.display = "block";
+                } else {
+                    alert("Có lỗi xảy ra: " + (data.errors ? data.errors.join(", ") : "Không xác định"));
+                }
+            })
+            .catch(error => {
+                console.error("Lỗi khi mở tài khoản:", error);
+                alert("Đã xảy ra lỗi khi gửi yêu cầu.");
+            });
+        });
+
+        // Hàm đóng pop-up
+        function closePopup() {
+            document.getElementById("popup").style.display = "none";
+            document.getElementById("overlay").style.display = "none";
+            // Tải lại trang hoặc chuyển hướng nếu cần
+            window.location.href = '/DepositAccount/MoTaiKhoanTienGui';
+        }
     </script>
 }

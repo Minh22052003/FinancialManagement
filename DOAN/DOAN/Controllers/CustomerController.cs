@@ -202,9 +202,19 @@ public IActionResult Delete(string id)
                 maKH = customer.CustomerId,
                 tenKhachHang = customer.FullName,
                 soDienThoai = customer.Phone,
-                identityNumber = customer.IdentityNumber
+                identityNumber = customer.IdentityNumber,
+                address = customer.Address,
             });
         }
 
+        [HttpGet]
+        public IActionResult GetCustomerCountInMonth()
+        {
+            var now = DateTime.Now;
+            int prefix = int.Parse(now.ToString("yyMM"));
+            int countInMonth = _context.Customers
+                .Count(c => c.CustomerId.ToString().StartsWith(prefix.ToString())) + 1;
+            return Json(new { count = countInMonth });
+        }
     }
 }

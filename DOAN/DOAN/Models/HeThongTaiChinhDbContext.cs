@@ -264,13 +264,19 @@ public partial class HeThongTaiChinhDbContext : DbContext
             entity.Property(e => e.ProfileId)
                 .HasMaxLength(50)
                 .HasColumnName("ProfileID");
+            entity.Property(e => e.ApprovedAt).HasColumnType("datetime");
             entity.Property(e => e.CitizenId)
                 .HasMaxLength(50)
                 .HasColumnName("CitizenID");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
             entity.Property(e => e.CustomerName).HasMaxLength(100);
             entity.Property(e => e.IsApproved)
                 .HasMaxLength(50)
                 .HasDefaultValueSql("((0))");
+            entity.Property(e => e.LoanAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.RejectedAt).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<PaymentHistory>(entity =>

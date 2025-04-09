@@ -5,8 +5,67 @@
     var currentDate = DateTime.Now.Date;
 }
 
-<h2 class="mb-4 fw-bold">@ViewData["Title"]</h2>
-<a href="@Url.Action("ExportToPdfAllNo", "Reports")" class="btn btn-primary mb-3">Xuất PDF</a>
+<h2 class="mb-4 fw-bold">Báo cáo danh sách tài khoản vay</h2>
+<form method="get" asp-action="BaoCaoDanhSachTaikhoanVay" class="row g-3 mb-4">
+    <div class="col-md-3">
+        <label for="searchTerm" class="form-label">Tìm kiếm khách hàng</label>
+        <input type="text" name="searchTerm" id="searchTerm" class="form-control"
+               placeholder="Nhập tên hoặc mã KH" value="@ViewBag.SearchTerm" />
+    </div>
+
+    <div class="col-md-3">
+        <label for="loanStatus" class="form-label">Trạng thái giải ngân</label>
+        <select class="form-select" id="loanStatus" name="loanStatus">
+            <option value="">-- Tất cả --</option>
+            @{
+                var options = new[] { "Đã giải ngân", "Chờ giải ngân" };
+                var selected = ViewBag.LoanStatus as string;
+                foreach (var opt in options)
+                {
+                    var isSelected = selected == opt ? "selected='selected'" : "";
+                    @:<option value="@opt" @Html.Raw(isSelected)>@opt</option>
+                }
+            }
+        </select>
+
+    </div>
+
+    <div class="col-md-3">
+        <label for="isFullyPaid" class="form-label">Tình trạng trả nợ</label>
+        <select class="form-select" id="isFullyPaid" name="isFullyPaid">
+            <option value="">-- Tất cả --</option>
+            @{
+                var isFullyPaidValue = ViewBag.IsFullyPaid?.ToString();
+            }
+
+            @if (isFullyPaidValue == "False")
+            {
+                <option value="false" selected="selected">Chưa trả hết</option>
+                <option value="true">Đã trả hết</option>
+            }
+            else if (isFullyPaidValue == "True")
+            {
+                <option value="false">Chưa trả hết</option>
+                <option value="true" selected="selected">Đã trả hết</option>
+            }
+            else
+            {
+                <option value="false">Chưa trả hết</option>
+                <option value="true">Đã trả hết</option>
+            }
+        </select>
+    </div>
+
+
+    <div class="col-12 mt-2">
+        <button type="submit" class="btn btn-primary">Lọc</button>
+        <a asp-action="ExportToPdfDanhSachTaiKhoanVay"
+           asp-route-searchTerm="@ViewBag.SearchTerm"
+           asp-route-loanStatus="@ViewBag.LoanStatus"
+           asp-route-isFullyPaid="@ViewBag.IsFullyPaid"
+           class="btn btn-success">Xuất PDF</a>
+    </div>
+</form>
 
 <table class="table table-hover table-bordered shadow-sm rounded-3 overflow-hidden">
     <thead class="custom-table-header text-center align-middle">
@@ -21,20 +80,13 @@
     <tbody class="align-middle">
         @foreach (var item in Model)
         {
-            // Nếu DueDate có giá trị, chuyển sang DateTime để so sánh, nếu không hiển thị "Chưa xác định"
-            DateTime? dueDate = item.DueDate.HasValue
-            ? item.DueDate.Value.ToDateTime(new TimeOnly(0, 0))
-            : null;
-            var status = "Chưa đến hạn";
-            if (dueDate.HasValue)
-            {
-                status = currentDate > dueDate.Value.Date ? "Đến hạn" : "Chưa đến hạn";
-            }
+            DateTime? dueDate = item.DueDate?.ToDateTime(new TimeOnly(0, 0));
+            var status = dueDate.HasValue && currentDate > dueDate.Value ? "Đến hạn" : "Chưa đến hạn";
             <tr>
                 <td>@item.LoanId</td>
-                <td>@(item.Customer != null ? item.Customer.FullName : "Không có dữ liệu")</td>
+                <td>@(item.Customer?.FullName ?? "Không có dữ liệu")</td>
                 <td>@item.LoanAmount.ToString("N2")</td>
-                <td>@(dueDate.HasValue ? dueDate.Value.ToString("dd/MM/yyyy") : "Chưa xác định")</td>
+                <td>@(dueDate?.ToString("dd/MM/yyyy") ?? "Chưa xác định")</td>
                 <td>@status</td>
             </tr>
         }
@@ -51,9 +103,9 @@
             background-color: #E6F0FF;
         }
 
-            .custom-table-header th {
-                color: #0056b3;
-            }
+        .custom-table-header th {
+            color: #0056b3;
+        }
 
         .table {
             border-radius: 10px;

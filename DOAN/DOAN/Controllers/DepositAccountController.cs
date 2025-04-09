@@ -60,84 +60,89 @@ namespace DOAN.Controllers
         {
             if (ModelState.IsValid)
             {
-                // 1. Tạo khách hàng mới
-                var now = DateTime.Now;
-                int prefix = int.Parse(now.ToString("yyMM"));
-                int countInMonth = _context.Customers.Count(c => c.CustomerId.StartsWith(prefix.ToString())) + 1;
-                string customerIdStr = prefix + countInMonth.ToString("D2");
-
-                var customer = new Customer
+                try
                 {
-                    CustomerId = customerIdStr,
-                    FullName = model.CustomerName,
-                    Phone = model.PhoneNumber,
-                    IdentityNumber = model.IdentityNumber,
-                };
-                _context.Customers.Add(customer);
-                _context.SaveChanges();
+                    string customerIdStr = model.CustomerId;
 
-                // 2. Tạo bản ghi tài khoản tiền gửi
-                var depositAccount = new DepositAccount
-                {
-                    CustomerId = customer.CustomerId,
-                    AccountNumber = GenerateAccountNumber(),  // Hàm tạo số tài khoản
-                    AccountType = model.AccountType,
-                    Balance = model.InitialDeposit,
-                    Term = model.Term,
-                    InterestRate = model.InterestRate,
-                    CreatedAt = model.OpenDate,
-                    Status = "Active",
-                    Branch = model.Branch
-                };
-
-                if (depositAccount.Term.HasValue)
-                {
-                    DateTime maturity = depositAccount.CreatedAt.AddMonths(depositAccount.Term.Value);
-                    depositAccount.MaturityDate = DateOnly.FromDateTime(maturity);
-                }
-
-                _context.DepositAccounts.Add(depositAccount);
-                _context.SaveChanges();
-
-                // 3. Nếu chọn phương thức nhận lãi là "mochuyendung", tạo tài khoản chuyên dụng
-                if (!string.IsNullOrEmpty(model.InterestReceiveMethod) &&
-                    model.InterestReceiveMethod.Equals("mochuyendung", StringComparison.OrdinalIgnoreCase))
-                {
-
-                    var specialized = new SpecializedAccount
+                    // Nếu chưa có info, thêm mới khách hàng
+                    if (!_context.Customers.Any(c => c.CustomerId == customerIdStr))
                     {
-                        AccountId = model.AccountNumberDeposit.ToString(), // Lấy giá trị từ view
-                        AccountHolder = model.AccountHolderDeposit, // Lấy từ form nhập tên chủ tài khoản chuyên dụng
-                        Balance = 0, // Số dư ban đầu là 0
-                        AccountType = "Tài khoản chuyên dụng nhận lãi gửi",
-                        Branch = model.Branch,
-                        CreateAt = DateTime.Now
+                        var customer = new Customer
+                        {
+                            CustomerId = customerIdStr,
+                            FullName = model.CustomerName,
+                            Phone = model.PhoneNumber,
+                            IdentityNumber = model.IdentityNumber,
+                        };
+                        _context.Customers.Add(customer);
+                        _context.SaveChanges();
+                    }
+
+                    // Tạo tài khoản tiền gửi
+                    string generatedDepositAccountNumber = GenerateAccountNumber();
+
+                    var depositAccount = new DepositAccount
+                    {
+                        CustomerId = customerIdStr,
+                        AccountNumber = generatedDepositAccountNumber,
+                        AccountType = model.AccountType,
+                        Balance = model.InitialDeposit,
+                        Term = model.Term,
+                        InterestRate = model.InterestRate,
+                        CreatedAt = model.OpenDate,
+                        Status = "Active",
+                        Branch = model.Branch
                     };
 
-                    _context.SpecializedAccounts.Add(specialized);
+                    if (depositAccount.Term.HasValue)
+                    {
+                        DateTime maturity = depositAccount.CreatedAt.AddMonths(depositAccount.Term.Value);
+                        depositAccount.MaturityDate = DateOnly.FromDateTime(maturity);
+                    }
+
+                    _context.DepositAccounts.Add(depositAccount);
                     _context.SaveChanges();
 
-                    // Liên kết tài khoản tiền gửi với tài khoản chuyên dụng vừa tạo
-                    depositAccount.SpecializedAccountId = specialized.AccountId;
-                    _context.SaveChanges();
+                    // Nếu có tài khoản chuyên dụng
+                    string? specializedAccNum = null;
 
-                    // Nếu bạn muốn trả về id tài khoản chuyên dụng về view (ví dụ hiển thị thông báo), có thể gán:
-                    model.AccountNumberDeposit = int.Parse(specialized.AccountId);
+                    if (!string.IsNullOrEmpty(model.InterestReceiveMethod) &&
+                        model.InterestReceiveMethod.Equals("mochuyendung", StringComparison.OrdinalIgnoreCase))
+                    {
+                        specializedAccNum = model.AccountNumberDeposit.ToString();
+
+                        var specialized = new SpecializedAccount
+                        {
+                            AccountId = specializedAccNum,
+                            AccountHolder = model.AccountHolderDeposit,
+                            Balance = 0,
+                            AccountType = "Tài khoản chuyên dụng nhận lãi gửi",
+                            Branch = model.Branch,
+                            CreateAt = DateTime.Now
+                           
+                        };
+                        _context.SpecializedAccounts.Add(specialized);
+                        _context.SaveChanges();
+                    }
+
+                    return Json(new
+                    {
+                        success = true,
+                        depositAccountNumber = generatedDepositAccountNumber,
+                        specializedAccountNumber = specializedAccNum,
+                        openDateTime = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")
+                    });
                 }
-
-                return RedirectToAction("DanhSachTaiKhoanTienGui");
-            }
-            else
-            {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
-                // Log các lỗi này, ví dụ:
-                foreach (var error in errors)
+                catch (Exception ex)
                 {
-                    Console.WriteLine(error);
+                    return Json(new { success = false, errors = new[] { "Lỗi hệ thống: " + ex.Message } });
                 }
             }
-                return View(model);
+
+            return Json(new { success = false, errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray() });
         }
+
+
 
 
 

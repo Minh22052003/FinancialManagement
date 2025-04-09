@@ -31,7 +31,9 @@
             <tr data-interestrate="@(item.InterestRate.HasValue ? item.InterestRate.Value.ToString("N2") : "")"
                 data-loanstatus="@item.LoanStatus"
                 data-paymentmethod="@item.PaymentMethod"
-                data-isfullypaid="@item.IsFullyPaid">
+                data-isfullypaid="@item.IsFullyPaid"
+                data-customerid = "@item.Customer.CustomerId" 
+                data-customername="@item.Customer.FullName">
                 <td>@item.LoanId</td>
                 <td>@item.LoanAmount.ToString("N0")</td>
                 <td>@loanTerm</td>
@@ -59,6 +61,14 @@
                 <tr>
                     <th>Mã khoản vay</th>
                     <td><input type="text" id="loanCodeDetail" disabled /></td>
+                </tr>
+                <tr>
+                    <th>Mã khách hàng</th>
+                    <td><input type="text" id="customerIdDetail" disabled /></td>
+                </tr>
+                <tr>
+                    <th>Tên khách hàng</th>
+                    <td><input type="text" id="customerNameDetail" disabled /></td>
                 </tr>
                 <tr>
                     <th>Số tiền vay</th>
@@ -257,7 +267,7 @@
         }
 
         // Mở modal cập nhật
-        function openUpdateModal(button) {
+        function openModal(button) {
             var row = button.closest("tr");
             var cells = row.cells;
             var loanCode = cells[0].textContent.trim();
@@ -268,18 +278,23 @@
             var interestRate = row.getAttribute("data-interestrate");
             var loanStatus = row.getAttribute("data-loanstatus");
             var paymentMethod = row.getAttribute("data-paymentmethod");
-            var isFullyPaid = row.getAttribute("data-isfullypaid");
+            var customerId = row.getAttribute("data-customerid");     // Lấy mã KH
+            var customerName = row.getAttribute("data-customername"); // Lấy tên KH
 
-            document.getElementById("loanCodeUpdate").value = loanCode;
-            document.getElementById("loanAmountUpdate").value = parseFloat(loanAmount.replace(/,/g, "")) || 0;
-            document.getElementById("loanTermUpdate").value = loanTerm;
-            document.getElementById("disbursementDateUpdate").value = disbursementDate;
-            document.getElementById("interestRateUpdate").value = interestRate;
-            document.getElementById("loanStatusUpdate").value = loanStatus;
-            document.getElementById("paymentTypeUpdate").value = paymentMethod;
-            document.getElementById("isFullyPaidUpdate").value = isFullyPaid;
+            // Chuyển đổi phương thức thanh toán
+            var paymentMethodText = (paymentMethod === "Auto") ? "Từ tài khoản chuyên dụng" :
+                (paymentMethod === "Counter") ? "Nộp tiền tại quầy" : paymentMethod;
 
-            document.getElementById("updateModal").style.display = "block";
+            document.getElementById("loanCodeDetail").value = loanCode;
+            document.getElementById("customerIdDetail").value = customerId;       // Điền mã KH
+            document.getElementById("customerNameDetail").value = customerName;   // Điền tên KH
+            document.getElementById("loanAmountDetail").value = loanAmount;
+            document.getElementById("loanTermDetail").value = loanTerm;
+            document.getElementById("disbursementDateDetail").value = disbursementDate;
+            document.getElementById("interestRateDetail").value = interestRate;
+            document.getElementById("loanStatusDetail").value = loanStatus;
+            document.getElementById("paymentMethodDetail").value = paymentMethodText;
+            document.getElementById("detailsModal").style.display = "block";
         }
 
         // Hàm đóng modal

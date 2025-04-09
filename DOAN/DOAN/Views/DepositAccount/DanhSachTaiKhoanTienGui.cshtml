@@ -13,6 +13,7 @@
             <th>Ngày mở</th>
             <th>Số tiền gửi ban đầu</th>
             <th>Lãi suất (%)</th>
+            <th>Thời gian gửi</th>
             <th>Thao tác</th>
         </tr>
     </thead>
@@ -26,6 +27,7 @@
                 <td>@item.OpenDate.ToString("dd/MM/yyyy")</td>
                 <td>@item.InitialDeposit.ToString("N0") VND</td>
                 <td>@(item.InterestRate?.ToString("0.##") ?? "0")%</td>
+                <td>@item.Term</td>
                 <td class="text-center">
                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#detailsModal"
                             data-name="@item.CustomerName"

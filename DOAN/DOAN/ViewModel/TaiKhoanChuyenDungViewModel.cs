@@ -17,7 +17,9 @@ namespace DOAN.ViewModel
         [Required(ErrorMessage = "CMND/CCCD/Hộ chiếu không được để trống")]
         [Display(Name = "CMND/CCCD/Hộ chiếu")]
         public string? IdentityNumber { get; set; }
-
+        [Required(ErrorMessage = "Địa chỉ không được để trống")]
+        [Display(Name = "Địa chỉ")]
+        public string Address { get; set; }
         // Thông tin tài khoản tiền gửi
         [Display(Name = "Chi nhánh")]
         public string? Branch { get; set; } = "Bình Gia Branch";
@@ -54,5 +56,7 @@ namespace DOAN.ViewModel
 
         [Display(Name = "Số tài khoản nhận lãi")]
         public int? AccountNumberDeposit { get; set; }       // (Tùy chọn: được tạo bởi JS)
+
+        public string? CustomerId { get; set; }
     }
 }

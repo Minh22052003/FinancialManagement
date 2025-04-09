@@ -1,0 +1,103 @@
+﻿@model List<DOAN.Models.DepositAccount>
+
+@{
+    ViewData["Title"] = "Báo cáo tổng hợp khách hàng";
+    var groupedData = ViewBag.GroupedData;
+}
+
+<h2 class="mb-4 fw-bold">Báo cáo tổng hợp khách hàng</h2>
+
+<form method="get" asp-action="BaoCaoTongHopKhachHang" class="row mb-4">
+    <div class="col-md-3">
+        <label class="form-label">Tên khách hàng</label>
+        <input type="text" class="form-control" name="searchName" value="@ViewBag.SearchName" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Mã khách hàng</label>
+        <input type="text" class="form-control" name="searchId" value="@ViewBag.SearchId" />
+    </div>
+    @* <div class="col-md-3">
+        <label class="form-label">Loại tài khoản</label>
+        <input type="text" class="form-control" name="accountType" value="@ViewBag.AccountType" />
+    </div> *@
+    <div class="col-md-3">
+        <label class="form-label">Từ ngày</label>
+        <input type="date" class="form-control" name="fromDate" value="@ViewBag.FromDate" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Đến ngày</label>
+        <input type="date" class="form-control" name="toDate" value="@ViewBag.ToDate" />
+    </div>
+    <div class="col-12 mt-3">
+        <button type="submit" class="btn btn-success">Lọc</button>
+        <a class="btn btn-primary ms-2" href="@Url.Action("ExportToPdf", "Reports", new {
+            searchName = ViewBag.SearchName,
+            searchId = ViewBag.SearchId,
+            accountType = ViewBag.AccountType,
+            fromDate = ViewBag.FromDate,
+            toDate = ViewBag.ToDate
+        })">Xuất PDF</a>
+    </div>
+</form>
+
+
+
+<table class="table table-hover table-bordered shadow-sm rounded-3 overflow-hidden">
+    <thead class="custom-table-header text-center align-middle">
+        <tr>
+            <th>Mã KH</th>
+            <th>Tên khách hàng</th>
+            <th>Số lượng TK tiền gửi</th>
+            <th>Số lượng khoản vay</th>
+            <th>Tổng số dư tiền gửi</th>
+            <th>Tổng số tiền vay</th>
+            <th>Ngày mở gần nhất</th>
+        </tr>
+    </thead>
+    <tbody class="align-middle">
+        @if (groupedData != null)
+        {
+            foreach (var item in groupedData)
+            {
+                <tr>
+                    <td>@(item.CustomerId ?? "Không có dữ liệu")</td>
+                    <td>@(item.FullName ?? "Không có dữ liệu")</td>
+                    <td class="text-center">@item.DepositAccountCount</td>
+                    <td class="text-center">@item.LoanAccountCount</td>
+                    <td class="text-end">@string.Format("{0:N0}", item.TotalDepositBalance)</td>
+                    <td class="text-end">@string.Format("{0:N0}", item.TotalLoanAmount)</td>
+                    <td class="text-center">
+                        @(item.OpenDate != null
+                            ? ((DateTime)item.OpenDate).ToString("dd/MM/yyyy")
+                            : "Không có dữ liệu")
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="7" class="text-center">Không có dữ liệu</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .custom-table-header {
+        background-color: #E6F0FF;
+    }
+
+        .custom-table-header th {
+            color: #0056b3;
+        }
+
+    .table {
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 123, 255, 0.1);
+    }
+</style>

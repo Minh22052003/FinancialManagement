@@ -2,27 +2,82 @@
 
 @{
     ViewData["Title"] = "Báo cáo danh sách tài khoản tiền gửi";
+
+    var fromDate = Context.Request.Query["fromDate"].ToString();
+    var toDate = Context.Request.Query["toDate"].ToString();
+    var accountType = Context.Request.Query["accountType"].ToString();
+    var searchTerm = Context.Request.Query["searchTerm"].ToString();
+    var minBalance = Context.Request.Query["minBalance"].ToString();
+    //var maxBalance = Context.Request.Query["maxBalance"].ToString();
 }
 
-<h2 class="mb-4 fw-bold">Báo cáo danh sách tài khoản tiền gửi</h2>
-<a href="@Url.Action("ExportToPdf", "Reports")" class="btn btn-primary mb-3">Xuất PDF</a>
 
+<h2 class="mb-4 fw-bold">Báo cáo danh sách tài khoản tiền gửi</h2>
+
+<form method="get" asp-action="BaoCaoTaiKhoanTienGui" class="row mb-4">
+    <div class="col-md-3">
+        <label for="fromDate" class="form-label">Từ ngày</label>
+        <input type="date" class="form-control" name="fromDate" value="@fromDate" />
+    </div>
+    <div class="col-md-3">
+        <label for="toDate" class="form-label">Đến ngày</label>
+        <input type="date" class="form-control" name="toDate" value="@toDate" />
+    </div>
+    <div class="col-md-3">
+        <label for="accountType" class="form-label">Loại tài khoản</label>
+        <input type="text" class="form-control" name="accountType" value="@accountType" />
+    </div>
+    <div class="col-md-3">
+        <label for="searchTerm" class="form-label">Tên KH hoặc Số TK</label>
+        <input type="text" class="form-control" name="searchTerm" value="@searchTerm" />
+    </div>
+    <div class="col-md-3 mt-3">
+        <label for="minBalance" class="form-label">Số dư tối thiểu</label>
+        <input type="number" class="form-control" name="minBalance" value="@minBalance" step="1000000" min="0" />
+    </div>
+    <div class="col-12 mt-3">
+        <button type="submit" class="btn btn-success">Lọc</button>
+
+        <a class="btn btn-primary ms-2"
+           href="@Url.Action("ExportToPdf", "Reports", new {
+               fromDate = fromDate,
+               toDate = toDate,
+               accountType = accountType,
+               searchTerm = searchTerm,
+               minBalance = minBalance
+           })">
+            Xuất PDF
+        </a>
+    </div>
+</form>
+
+<!-- Table -->
 <table class="table table-hover table-bordered shadow-sm rounded-3 overflow-hidden">
     <thead class="custom-table-header text-center align-middle">
         <tr>
+            <th>STT</th>
             <th>Mã tài khoản</th>
             <th>Tên khách hàng</th>
-            <th>Số dư</th>
+            <th>Ngày mở</th>
+            <th>Loại tài khoản</th>
+            <th>Số dư hiện tại</th>
         </tr>
     </thead>
     <tbody class="align-middle">
+        @{
+            int stt = 1;
+        }
         @foreach (var item in Model)
         {
             <tr>
-                <td>@item.AccountId</td>
+                <td>@stt</td>
+                <td>@item.AccountNumber</td>
                 <td>@(item.Customer != null ? item.Customer.FullName : "Không có dữ liệu")</td>
-                <td>@(item.Balance.ToString("N2") ?? "0.00")</td>
+                <td>@(item.CreatedAt != null ? item.CreatedAt.ToString("dd/MM/yyyy") : "Không có dữ liệu")</td>
+                <td>@(string.IsNullOrEmpty(item.AccountType) ? "Không có dữ liệu" : item.AccountType)</td>
+                <td>@item.Balance.ToString("N2")</td>
             </tr>
+            stt++;
         }
     </tbody>
 </table>

@@ -1,11 +1,9 @@
 ﻿using DOAN.Models;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using static System.Net.Mime.MediaTypeNames;
-using System.Reflection.Metadata;
-using System.Xml.Linq;
-using iTextSharp.text.pdf;
-using iTextSharp.text;
+using OfficeOpenXml;
 
 namespace DOAN.Controllers
 {
@@ -16,33 +14,218 @@ namespace DOAN.Controllers
         {
             this._context = _context;
         }
-        public IActionResult BaoCaoTaiKhoanTienGui()
+        public IActionResult BaoCaoTaiKhoanTienGui(DateTime? fromDate, DateTime? toDate, string accountType, string searchTerm, decimal? minBalance)
         {
-            var accounts = _context.DepositAccounts
-                .Include(a => a.Customer)
-                .ToList();
-            return View(accounts);
-        }
-        public IActionResult BaoCaoTaiKhoanNoDenHan()
-        {
-            var loanAccounts = _context.LoanAccounts
-                 .Include(l => l.Customer)
-                .ToList();
-            return View(loanAccounts);
-        }
-        public IActionResult BaoCaoDanhSachTaikhoanVay()
-        {
-            var loanAccounts = _context.LoanAccounts
-                 .Include(l => l.Customer)
-                .ToList();
-            return View(loanAccounts);
+            var accounts = _context.DepositAccounts.Include(a => a.Customer).AsQueryable();
+
+            if (fromDate.HasValue)
+                accounts = accounts.Where(a => a.CreatedAt >= fromDate.Value);
+            if (toDate.HasValue)
+                accounts = accounts.Where(a => a.CreatedAt <= toDate.Value);
+            if (!string.IsNullOrEmpty(accountType))
+                accounts = accounts.Where(a => a.AccountType.Contains(accountType));
+            if (!string.IsNullOrEmpty(searchTerm))
+                accounts = accounts.Where(a =>
+                    a.Customer.FullName.Contains(searchTerm) ||
+                    a.AccountNumber.Contains(searchTerm));
+            if (minBalance.HasValue)
+                accounts = accounts.Where(a => a.Balance >= minBalance.Value);
+            return View(accounts.ToList());
         }
 
-        public IActionResult ExportToPdf()
+        public IActionResult BaoCaoDanhSachTaikhoanVay(string? searchTerm, string? loanStatus, bool? isFullyPaid)
         {
-            var accounts = _context.DepositAccounts
-                .Include(a => a.Customer)
+            var loanAccounts = _context.LoanAccounts.Include(l => l.Customer).AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                loanAccounts = loanAccounts.Where(l =>
+                    l.Customer.FullName.Contains(searchTerm) ||
+                    l.CustomerId.Contains(searchTerm));
+            }
+
+            if (!string.IsNullOrEmpty(loanStatus))
+            {
+                loanAccounts = loanAccounts.Where(l => l.LoanStatus == loanStatus);
+            }
+
+            if (isFullyPaid.HasValue)
+            {
+                loanAccounts = loanAccounts.Where(l => l.IsFullyPaid == isFullyPaid.Value);
+            }
+
+            ViewBag.SearchTerm = searchTerm;
+            ViewBag.LoanStatus = loanStatus;
+            ViewBag.IsFullyPaid = isFullyPaid;
+
+            return View(loanAccounts.ToList());
+        }
+
+        public IActionResult BaoCaoTongHopKhachHang(string? searchName, string? searchId, string? accountType, DateTime? fromDate, DateTime? toDate)
+        {
+            var depositAccounts = _context.DepositAccounts.Include(d => d.Customer).AsQueryable();
+            var loanAccounts = _context.LoanAccounts.Include(l => l.Customer).AsQueryable();
+
+            // Lọc theo tên KH
+            if (!string.IsNullOrEmpty(searchName))
+            {
+                depositAccounts = depositAccounts.Where(d => d.Customer.FullName.Contains(searchName));
+                loanAccounts = loanAccounts.Where(l => l.Customer.FullName.Contains(searchName));
+            }
+
+            // Lọc theo mã KH
+            if (!string.IsNullOrEmpty(searchId))
+            {
+                depositAccounts = depositAccounts.Where(d => d.CustomerId.Contains(searchId));
+                loanAccounts = loanAccounts.Where(l => l.CustomerId.Contains(searchId));
+            }
+
+            // Lọc theo ngày mở
+            if (fromDate.HasValue)
+            {
+                depositAccounts = depositAccounts.Where(d => d.CreatedAt >= fromDate.Value);
+            }
+
+            if (toDate.HasValue)
+            {
+                depositAccounts = depositAccounts.Where(d => d.CreatedAt <= toDate.Value);
+            }
+
+            var depositList = depositAccounts.ToList();
+            var loanList = loanAccounts.ToList();
+
+            var groupedData = depositList
+                .GroupBy(d => d.CustomerId)
+                .Select(g =>
+                {
+                    var customerLoans = loanList.Where(l => l.CustomerId == g.Key).ToList();
+
+                    return new
+                    {
+                        CustomerId = g.Key,
+                        FullName = g.First().Customer?.FullName ?? "Không có dữ liệu",
+                        DepositAccountCount = g.Count(),
+                        LoanAccountCount = customerLoans.Count,
+                        TotalDepositBalance = g.Sum(d => d.Balance),
+                        TotalLoanAmount = customerLoans.Sum(l => l.LoanAmount),
+                        OpenDate = g.Min(d => d.CreatedAt)
+                    };
+                })
                 .ToList();
+
+
+            // Truyền lại filter cho View
+            ViewBag.GroupedData = groupedData;
+            ViewBag.SearchName = searchName;
+            ViewBag.SearchId = searchId;
+            ViewBag.AccountType = accountType;
+            ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
+            ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
+
+            return View();
+        }
+
+
+        public IActionResult BaoCaoHoSoVayVon(string? tenKhachHang,
+            string? trangThai,
+            DateTime? tuNgayTao, DateTime? denNgayTao,
+            DateTime? tuNgayPheDuyet, DateTime? denNgayPheDuyet,
+            DateTime? tuNgayTuChoi, DateTime? denNgayTuChoi)
+        {
+            var query = _context.LoanProfiles.AsQueryable();
+
+            if (!string.IsNullOrEmpty(tenKhachHang))
+                query = query.Where(p => p.CustomerName.Contains(tenKhachHang));
+
+            if (!string.IsNullOrEmpty(trangThai))
+            {
+                if (trangThai == "Đã phê duyệt")
+                    query = query.Where(p => p.IsApproved == "true");
+                else if (trangThai == "Từ chối")
+                    query = query.Where(p => p.IsApproved == "false");
+                else if (trangThai == "Đang chờ")
+                    query = query.Where(p => string.IsNullOrEmpty(p.IsApproved) || (p.IsApproved != "true" && p.IsApproved != "false"));
+            }
+
+            if (tuNgayTao.HasValue)
+                query = query.Where(p => p.CreatedAt >= tuNgayTao.Value);
+
+            if (denNgayTao.HasValue)
+                query = query.Where(p => p.CreatedAt <= denNgayTao.Value);
+
+            if (tuNgayPheDuyet.HasValue)
+                query = query.Where(p => p.ApprovedAt.HasValue && p.ApprovedAt.Value >= tuNgayPheDuyet.Value);
+
+            if (denNgayPheDuyet.HasValue)
+                query = query.Where(p => p.ApprovedAt.HasValue && p.ApprovedAt.Value <= denNgayPheDuyet.Value);
+
+            if (tuNgayTuChoi.HasValue)
+                query = query.Where(p => p.RejectedAt.HasValue && p.RejectedAt.Value >= tuNgayTuChoi.Value);
+
+            if (denNgayTuChoi.HasValue)
+                query = query.Where(p => p.RejectedAt.HasValue && p.RejectedAt.Value <= denNgayTuChoi.Value);
+
+            var tempResult = query
+                .Select(p => new
+                {
+                    p.ProfileId,
+                    p.CustomerName,
+                    p.CitizenId,
+                    p.CreatedAt,
+                    p.ApprovedAt,
+                    p.RejectedAt,
+                    p.IsApproved
+                })
+                .ToList();
+
+            var result = tempResult
+                .Select(p => new
+                {
+                    p.ProfileId,
+                    p.CustomerName,
+                    p.CitizenId,
+                    p.CreatedAt,
+                    p.ApprovedAt,
+                    p.RejectedAt,
+                    TrangThai = p.IsApproved
+                }).ToList();
+
+
+            ViewBag.Data = result;
+
+            // Giữ lại các giá trị filter khi reload view
+            ViewBag.TenKhachHang = tenKhachHang;
+            ViewBag.TrangThai = trangThai;
+            ViewBag.TuNgayTao = tuNgayTao?.ToString("yyyy-MM-dd");
+            ViewBag.DenNgayTao = denNgayTao?.ToString("yyyy-MM-dd");
+            ViewBag.TuNgayPheDuyet = tuNgayPheDuyet?.ToString("yyyy-MM-dd");
+            ViewBag.DenNgayPheDuyet = denNgayPheDuyet?.ToString("yyyy-MM-dd");
+            ViewBag.TuNgayTuChoi = tuNgayTuChoi?.ToString("yyyy-MM-dd");
+            ViewBag.DenNgayTuChoi = denNgayTuChoi?.ToString("yyyy-MM-dd");
+
+            return View();
+        }
+
+
+
+
+
+        public IActionResult ExportToPdf(DateTime? fromDate, DateTime? toDate, string accountType, string searchTerm, decimal? minBalance)
+        {
+            var accounts = _context.DepositAccounts.Include(a => a.Customer).AsQueryable();
+
+            if (fromDate.HasValue)
+                accounts = accounts.Where(a => a.CreatedAt >= fromDate.Value);
+            if (toDate.HasValue)
+                accounts = accounts.Where(a => a.CreatedAt <= toDate.Value);
+            if (!string.IsNullOrEmpty(accountType))
+                accounts = accounts.Where(a => a.AccountType.Contains(accountType));
+            if (!string.IsNullOrEmpty(searchTerm))
+                accounts = accounts.Where(a =>
+                    a.Customer.FullName.Contains(searchTerm) ||
+                    a.AccountNumber.Contains(searchTerm));
+            if (minBalance.HasValue)
+                accounts = accounts.Where(a => a.Balance >= minBalance.Value);
 
             using (MemoryStream stream = new MemoryStream())
             {
@@ -50,185 +233,392 @@ namespace DOAN.Controllers
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 document.Open();
 
-                // 🛠 Load font hỗ trợ tiếng Việt (Times New Roman)
                 string fontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "times.ttf");
                 BaseFont baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
                 iTextSharp.text.Font titleFont = new iTextSharp.text.Font(baseFont, 16, iTextSharp.text.Font.BOLD);
                 iTextSharp.text.Font textFont = new iTextSharp.text.Font(baseFont, 12, iTextSharp.text.Font.NORMAL);
 
-                // 📌 Thêm tiêu đề
-                Paragraph title = new Paragraph("Báo cáo danh sách tài khoản tiền gửi", titleFont);
-                title.Alignment = Element.ALIGN_CENTER;
-                title.SpacingAfter = 20;
+                Paragraph title = new Paragraph("Báo cáo danh sách tài khoản tiền gửi", titleFont)
+                {
+                    Alignment = Element.ALIGN_CENTER,
+                    SpacingAfter = 20
+                };
                 document.Add(title);
 
-                // 📌 Tạo bảng PDF
-                PdfPTable table = new PdfPTable(3);
-                table.WidthPercentage = 100;
+                PdfPTable table = new PdfPTable(3) { WidthPercentage = 100 };
                 table.SetWidths(new float[] { 2f, 5f, 3f });
 
-                // 📌 Tiêu đề cột (chỉnh font Unicode)
-                PdfPCell cell1 = new PdfPCell(new Phrase("Mã tài khoản", textFont));
-                PdfPCell cell2 = new PdfPCell(new Phrase("Tên khách hàng", textFont));
-                PdfPCell cell3 = new PdfPCell(new Phrase("Số dư", textFont));
+                table.AddCell(new PdfPCell(new Phrase("Mã tài khoản", textFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
+                table.AddCell(new PdfPCell(new Phrase("Tên khách hàng", textFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
+                table.AddCell(new PdfPCell(new Phrase("Số dư", textFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
 
-                cell1.BackgroundColor = BaseColor.LIGHT_GRAY;
-                cell2.BackgroundColor = BaseColor.LIGHT_GRAY;
-                cell3.BackgroundColor = BaseColor.LIGHT_GRAY;
-
-                table.AddCell(cell1);
-                table.AddCell(cell2);
-                table.AddCell(cell3);
-
-                // 📌 Thêm dữ liệu
                 foreach (var item in accounts)
                 {
-                    table.AddCell(new PdfPCell(new Phrase(item.AccountId.ToString(), textFont)));
-                    table.AddCell(new PdfPCell(new Phrase(item.Customer?.FullName ?? "Không có dữ liệu", textFont)));
-                    table.AddCell(new PdfPCell(new Phrase(item.Balance.ToString("N2"), textFont)));
+                    table.AddCell(new Phrase(item.AccountNumber, textFont));
+                    table.AddCell(new Phrase(item.Customer?.FullName ?? "Không có dữ liệu", textFont));
+                    table.AddCell(new Phrase(item.Balance.ToString("N2"), textFont));
                 }
 
                 document.Add(table);
                 document.Close();
-
                 return File(stream.ToArray(), "application/pdf", "BaoCaoTaiKhoanTienGui.pdf");
             }
         }
 
-        public IActionResult ExportToPdfNoHan()
+
+        public IActionResult ExportToPdfKhachHang(string? searchName, string? searchId, string? accountType, DateTime? fromDate, DateTime? toDate)
         {
-            // Lọc các khoản vay có DueDate hợp lệ và ngày hiện tại > DueDate (đến hạn)
-            var currentDate = DateTime.Now.Date;
-            var loansDue = _context.LoanAccounts
-                .Include(l => l.Customer)
-                .AsEnumerable()  // Chuyển dữ liệu về client
-                .Where(l => l.DueDate.HasValue && currentDate <= l.DueDate.Value.ToDateTime(new TimeOnly(0, 0)))
+            var depositAccounts = _context.DepositAccounts.Include(d => d.Customer).AsQueryable();
+            var loanAccounts = _context.LoanAccounts.Include(l => l.Customer).AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchName))
+            {
+                depositAccounts = depositAccounts.Where(d => d.Customer.FullName.Contains(searchName));
+                loanAccounts = loanAccounts.Where(l => l.Customer.FullName.Contains(searchName));
+            }
+
+            if (!string.IsNullOrEmpty(searchId))
+            {
+                depositAccounts = depositAccounts.Where(d => d.CustomerId.Contains(searchId));
+                loanAccounts = loanAccounts.Where(l => l.CustomerId.Contains(searchId));
+            }
+
+            if (!string.IsNullOrEmpty(accountType))
+            {
+                depositAccounts = depositAccounts.Where(d => d.AccountType == accountType);
+            }
+
+            if (fromDate.HasValue)
+            {
+                depositAccounts = depositAccounts.Where(d => d.CreatedAt >= fromDate.Value);
+            }
+
+            if (toDate.HasValue)
+            {
+                depositAccounts = depositAccounts.Where(d => d.CreatedAt <= toDate.Value);
+            }
+
+            var depositList = depositAccounts.ToList();
+            var loanList = loanAccounts.ToList();
+
+            var groupedData = depositList
+                .GroupBy(d => d.CustomerId)
+                .Select(g =>
+                {
+                    var customerLoans = loanList.Where(l => l.CustomerId == g.Key).ToList();
+
+                    return new
+                    {
+                        CustomerId = g.Key,
+                        FullName = g.First().Customer?.FullName ?? "Không có dữ liệu",
+                        DepositAccountCount = g.Count(),
+                        LoanAccountCount = customerLoans.Count,
+                        TotalDepositBalance = g.Sum(d => d.Balance),
+                        TotalLoanAmount = customerLoans.Sum(l => l.LoanAmount),
+                        OpenDate = g.Min(d => d.CreatedAt)
+                    };
+                })
                 .ToList();
 
-
+            // Bắt đầu tạo PDF
             using (MemoryStream stream = new MemoryStream())
             {
-                iTextSharp.text.Document document = new iTextSharp.text.Document(PageSize.A4);
-                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                var document = new iTextSharp.text.Document(PageSize.A4.Rotate(), 20, 20, 20, 20); // Khổ ngang
+                PdfWriter.GetInstance(document, stream);
                 document.Open();
 
-                // Load font hỗ trợ tiếng Việt (Times New Roman)
+                // Font hỗ trợ tiếng Việt
                 string fontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "times.ttf");
                 BaseFont baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-                iTextSharp.text.Font titleFont = new iTextSharp.text.Font(baseFont, 16, iTextSharp.text.Font.BOLD);
-                iTextSharp.text.Font textFont = new iTextSharp.text.Font(baseFont, 12, iTextSharp.text.Font.NORMAL);
+                var titleFont = new iTextSharp.text.Font(baseFont, 16, iTextSharp.text.Font.BOLD);
+                var textFont = new iTextSharp.text.Font(baseFont, 12, iTextSharp.text.Font.NORMAL);
 
-                // Tiêu đề báo cáo
-                Paragraph title = new Paragraph("Báo cáo danh sách khoản vay đến hạn", titleFont);
-                title.Alignment = Element.ALIGN_CENTER;
-                title.SpacingAfter = 20;
+                // Tiêu đề
+                var title = new Paragraph("Báo cáo tổng hợp khách hàng", titleFont)
+                {
+                    Alignment = Element.ALIGN_CENTER,
+                    SpacingAfter = 20
+                };
                 document.Add(title);
 
-                // Tạo bảng PDF với 4 cột: Mã khoản vay, Tên khách hàng, Số tiền vay, Ngày đến hạn
-                PdfPTable table = new PdfPTable(4);
+                // Bảng dữ liệu
+                PdfPTable table = new PdfPTable(7);
                 table.WidthPercentage = 100;
-                table.SetWidths(new float[] { 2f, 5f, 3f, 3f });
+                table.SetWidths(new float[] { 2f, 4f, 3f, 3f, 3f, 3f, 3f });
 
-                PdfPCell cell1 = new PdfPCell(new Phrase("Mã khoản vay", textFont));
-                PdfPCell cell2 = new PdfPCell(new Phrase("Tên khách hàng", textFont));
-                PdfPCell cell3 = new PdfPCell(new Phrase("Số tiền vay", textFont));
-                PdfPCell cell4 = new PdfPCell(new Phrase("Ngày đến hạn", textFont));
-
-                cell1.BackgroundColor = BaseColor.LIGHT_GRAY;
-                cell2.BackgroundColor = BaseColor.LIGHT_GRAY;
-                cell3.BackgroundColor = BaseColor.LIGHT_GRAY;
-                cell4.BackgroundColor = BaseColor.LIGHT_GRAY;
-
-                table.AddCell(cell1);
-                table.AddCell(cell2);
-                table.AddCell(cell3);
-                table.AddCell(cell4);
-
-                foreach (var loan in loansDue)
+                string[] headers = { "Mã KH", "Tên KH", "Số lượng TK tiền gửi", "Số lượng khoản vay", "Tổng số dư tiền gửi", "Tổng tiền vay", "Ngày mở gần nhất" };
+                foreach (var header in headers)
                 {
-                    table.AddCell(new PdfPCell(new Phrase(loan.LoanId, textFont)));
-                    table.AddCell(new PdfPCell(new Phrase(loan.Customer?.FullName ?? "Không có dữ liệu", textFont)));
-                    table.AddCell(new PdfPCell(new Phrase(loan.LoanAmount.ToString("N2"), textFont)));
-                    string dueDateStr = loan.DueDate.HasValue
-                        ? loan.DueDate.Value.ToDateTime(new TimeOnly(0, 0)).ToString("dd/MM/yyyy")
-                        : "Chưa xác định";
-                    table.AddCell(new PdfPCell(new Phrase(dueDateStr, textFont)));
+                    PdfPCell cell = new PdfPCell(new Phrase(header, textFont));
+                    cell.BackgroundColor = BaseColor.LIGHT_GRAY;
+                    table.AddCell(cell);
+                }
+
+                foreach (var item in groupedData)
+                {
+                    table.AddCell(new Phrase(item.CustomerId ?? "Không có dữ liệu", textFont));
+                    table.AddCell(new Phrase(item.FullName ?? "Không có dữ liệu", textFont));
+                    table.AddCell(new Phrase(item.DepositAccountCount.ToString(), textFont));
+                    table.AddCell(new Phrase(item.LoanAccountCount.ToString(), textFont));
+                    table.AddCell(new Phrase(item.TotalDepositBalance.ToString("N0"), textFont));
+                    table.AddCell(new Phrase(item.TotalLoanAmount.ToString("N0"), textFont));
+                    table.AddCell(new Phrase(((DateTime)item.OpenDate).ToString("dd/MM/yyyy"), textFont));
                 }
 
                 document.Add(table);
                 document.Close();
 
-                return File(stream.ToArray(), "application/pdf", "BaoCaoKhoanVayDenHan.pdf");
+                return File(stream.ToArray(), "application/pdf", "BaoCaoTongHopKhachHang.pdf");
             }
         }
 
-        public IActionResult ExportToPdfAllNo()
+
+        public IActionResult ExportToPdfHoSoVayVon(string? tenKhachHang, string? trangThai,
+            DateTime? tuNgayTao, DateTime? denNgayTao,
+            DateTime? tuNgayPheDuyet, DateTime? denNgayPheDuyet,
+            DateTime? tuNgayTuChoi, DateTime? denNgayTuChoi)
         {
-            // Lấy tất cả các khoản vay (bao gồm cả thông tin khách hàng)
-            var loans = _context.LoanAccounts
-                .Include(l => l.Customer)
-                .ToList();
+            var query = _context.LoanProfiles.AsQueryable();
+
+            if (!string.IsNullOrEmpty(tenKhachHang))
+                query = query.Where(p => p.CustomerName.Contains(tenKhachHang));
+
+
+            if (tuNgayTao.HasValue)
+                query = query.Where(p => p.CreatedAt.Date >= tuNgayTao.Value.Date);
+            if (denNgayTao.HasValue)
+                query = query.Where(p => p.CreatedAt.Date <= denNgayTao.Value.Date);
+
+            if (tuNgayPheDuyet.HasValue)
+                query = query.Where(p => p.ApprovedAt.HasValue && p.ApprovedAt.Value.Date >= tuNgayPheDuyet.Value.Date);
+            if (denNgayPheDuyet.HasValue)
+                query = query.Where(p => p.ApprovedAt.HasValue && p.ApprovedAt.Value.Date <= denNgayPheDuyet.Value.Date);
+
+            if (tuNgayTuChoi.HasValue)
+                query = query.Where(p => p.RejectedAt.HasValue && p.RejectedAt.Value.Date >= tuNgayTuChoi.Value.Date);
+            if (denNgayTuChoi.HasValue)
+                query = query.Where(p => p.RejectedAt.HasValue && p.RejectedAt.Value.Date <= denNgayTuChoi.Value.Date);
+
+            var data = query.ToList();
 
             using (MemoryStream stream = new MemoryStream())
             {
-                iTextSharp.text.Document document = new iTextSharp.text.Document(PageSize.A4);
+                iTextSharp.text.Document document = new iTextSharp.text.Document(PageSize.A4.Rotate());
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 document.Open();
 
-                // Load font hỗ trợ tiếng Việt (Times New Roman)
+                // Font hỗ trợ tiếng Việt
                 string fontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "times.ttf");
                 BaseFont baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
                 iTextSharp.text.Font titleFont = new iTextSharp.text.Font(baseFont, 16, iTextSharp.text.Font.BOLD);
                 iTextSharp.text.Font textFont = new iTextSharp.text.Font(baseFont, 12, iTextSharp.text.Font.NORMAL);
 
-                // Tiêu đề báo cáo
-                Paragraph title = new Paragraph("Báo cáo danh sách tất cả các khoản vay", titleFont);
-                title.Alignment = Element.ALIGN_CENTER;
-                title.SpacingAfter = 20;
+                // Tiêu đề
+                Paragraph title = new Paragraph("BÁO CÁO TỔNG HỢP HỒ SƠ VAY VỐN", titleFont)
+                {
+                    Alignment = Element.ALIGN_CENTER,
+                    SpacingAfter = 20
+                };
                 document.Add(title);
 
-                // Tạo bảng PDF với 4 cột: Mã khoản vay, Tên khách hàng, Số tiền vay, Ngày đến hạn
-                PdfPTable table = new PdfPTable(4);
-                table.WidthPercentage = 100;
-                table.SetWidths(new float[] { 2f, 5f, 3f, 3f });
-
-                // Tiêu đề cột
-                PdfPCell cell1 = new PdfPCell(new Phrase("Mã khoản vay", textFont));
-                PdfPCell cell2 = new PdfPCell(new Phrase("Tên khách hàng", textFont));
-                PdfPCell cell3 = new PdfPCell(new Phrase("Số tiền vay", textFont));
-                PdfPCell cell4 = new PdfPCell(new Phrase("Ngày đến hạn", textFont));
-
-                cell1.BackgroundColor = BaseColor.LIGHT_GRAY;
-                cell2.BackgroundColor = BaseColor.LIGHT_GRAY;
-                cell3.BackgroundColor = BaseColor.LIGHT_GRAY;
-                cell4.BackgroundColor = BaseColor.LIGHT_GRAY;
-
-                table.AddCell(cell1);
-                table.AddCell(cell2);
-                table.AddCell(cell3);
-                table.AddCell(cell4);
-
-                // Thêm dữ liệu cho từng khoản vay
-                foreach (var loan in loans)
+                // Tạo bảng
+                PdfPTable table = new PdfPTable(8)
                 {
-                    table.AddCell(new PdfPCell(new Phrase(loan.LoanId, textFont)));
-                    table.AddCell(new PdfPCell(new Phrase(loan.Customer?.FullName ?? "Không có dữ liệu", textFont)));
-                    table.AddCell(new PdfPCell(new Phrase(loan.LoanAmount.ToString("N2"), textFont)));
+                    WidthPercentage = 100
+                };
+                table.SetWidths(new float[] { 2f, 4f, 3f, 3f, 3f, 3f, 3f, 3f });
 
-                    string dueDateStr = loan.DueDate.HasValue
-                        ? loan.DueDate.Value.ToDateTime(new TimeOnly(0, 0)).ToString("dd/MM/yyyy")
-                        : "Chưa xác định";
-                    table.AddCell(new PdfPCell(new Phrase(dueDateStr, textFont)));
+                // Header
+                string[] headers = { "Mã hồ sơ", "Tên KH", "Mã KH", "Số tiền vay", "Ngày tạo", "Ngày phê duyệt", "Ngày từ chối", "Trạng thái" };
+                foreach (var header in headers)
+                {
+                    PdfPCell cell = new PdfPCell(new Phrase(header, textFont))
+                    {
+                        BackgroundColor = BaseColor.LIGHT_GRAY,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+                    table.AddCell(cell);
+                }
+
+                // Dữ liệu
+                foreach (var item in data)
+                {
+                    table.AddCell(new PdfPCell(new Phrase(item.ProfileId, textFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.CustomerName, textFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.CitizenId, textFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.LoanAmount.ToString("N0"), textFont)) { HorizontalAlignment = Element.ALIGN_RIGHT });
+                    table.AddCell(new PdfPCell(new Phrase(item.CreatedAt.ToString("dd/MM/yyyy"), textFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.ApprovedAt?.ToString("dd/MM/yyyy") ?? "-", textFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.RejectedAt?.ToString("dd/MM/yyyy") ?? "-", textFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.Notes, textFont)));
                 }
 
                 document.Add(table);
                 document.Close();
 
-                return File(stream.ToArray(), "application/pdf", "BaoCaoTatCaKhoanVay.pdf");
+                return File(stream.ToArray(), "application/pdf", "BaoCao_HoSoVayVon.pdf");
             }
         }
 
 
+        public IActionResult XuatExcelBaoCaoHoSoVayVon(string? tenKhachHang, string? trangThai,
+            DateTime? tuNgayTao, DateTime? denNgayTao,
+            DateTime? tuNgayPheDuyet, DateTime? denNgayPheDuyet,
+            DateTime? tuNgayTuChoi, DateTime? denNgayTuChoi)
+        {
+            var query = _context.LoanProfiles.AsQueryable();
+
+            if (!string.IsNullOrEmpty(tenKhachHang))
+                query = query.Where(p => p.CustomerName.Contains(tenKhachHang));
+
+            if (!string.IsNullOrEmpty(trangThai))
+                query = query.Where(p => (p.IsApproved == "true" && trangThai == "Đã phê duyệt") ||
+                                         (p.IsApproved == "false" && trangThai == "Từ chối") ||
+                                         (string.IsNullOrEmpty(p.IsApproved) && trangThai == "Đang chờ"));
+
+            if (tuNgayTao.HasValue)
+                query = query.Where(p => p.CreatedAt >= tuNgayTao.Value);
+
+            if (denNgayTao.HasValue)
+                query = query.Where(p => p.CreatedAt <= denNgayTao.Value);
+
+            if (tuNgayPheDuyet.HasValue)
+                query = query.Where(p => p.ApprovedAt.HasValue && p.ApprovedAt.Value >= tuNgayPheDuyet.Value);
+
+            if (denNgayPheDuyet.HasValue)
+                query = query.Where(p => p.ApprovedAt.HasValue && p.ApprovedAt.Value <= denNgayPheDuyet.Value);
+
+            if (tuNgayTuChoi.HasValue)
+                query = query.Where(p => p.RejectedAt.HasValue && p.RejectedAt.Value >= tuNgayTuChoi.Value);
+
+            if (denNgayTuChoi.HasValue)
+                query = query.Where(p => p.RejectedAt.HasValue && p.RejectedAt.Value <= denNgayTuChoi.Value);
+
+            var data = query.ToList();
+
+            using var package = new ExcelPackage();
+            var sheet = package.Workbook.Worksheets.Add("HoSoVayVon");
+
+            // Header
+            var headers = new[] { "Mã hồ sơ", "Tên KH", "Mã KH", "Số tiền vay", "Ngày tạo", "Ngày phê duyệt", "Ngày từ chối", "Trạng thái" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                sheet.Cells[1, i + 1].Value = headers[i];
+                sheet.Cells[1, i + 1].Style.Font.Bold = true;
+                sheet.Column(i + 1).AutoFit();
+            }
+
+            // Data
+            for (int i = 0; i < data.Count; i++)
+            {
+                var item = data[i];
+                sheet.Cells[i + 2, 1].Value = item.ProfileId;
+                sheet.Cells[i + 2, 2].Value = item.CustomerName;
+                sheet.Cells[i + 2, 3].Value = item.CitizenId;
+                sheet.Cells[i + 2, 4].Value = item.LoanAmount;
+                sheet.Cells[i + 2, 5].Value = item.CreatedAt.ToString("dd/MM/yyyy");
+                sheet.Cells[i + 2, 6].Value = item.ApprovedAt?.ToString("dd/MM/yyyy") ?? "-";
+                sheet.Cells[i + 2, 7].Value = item.RejectedAt?.ToString("dd/MM/yyyy") ?? "-";
+                sheet.Cells[i + 2, 8].Value = item.IsApproved switch
+                {
+                    "true" => "Đã phê duyệt",
+                    "false" => "Từ chối",
+                    _ => "Đang chờ"
+                };
+            }
+
+            var stream = new MemoryStream(package.GetAsByteArray());
+            string fileName = $"BaoCaoHoSoVayVon_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+            return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
+        public IActionResult ExportToPdfDanhSachTaiKhoanVay(string? searchTerm, string? loanStatus, DateOnly? tuNgayTao, DateOnly? denNgayTao)
+        {
+            var loanAccounts = _context.LoanAccounts.Include(l => l.Customer).AsQueryable();
+            var currentDate = DateOnly.FromDateTime(DateTime.Now);
+
+            // Lọc theo từ khóa tìm kiếm
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                loanAccounts = loanAccounts.Where(l =>
+                    l.Customer.FullName.Contains(searchTerm) ||
+                    l.CustomerId.Contains(searchTerm));
+            }
+
+            // Lọc theo trạng thái khoản vay
+            if (!string.IsNullOrEmpty(loanStatus))
+            {
+                loanAccounts = loanAccounts.Where(l => l.LoanStatus == loanStatus);
+            }
+
+            // Lọc theo khoảng thời gian DueDate
+            if (tuNgayTao.HasValue)
+            {
+                loanAccounts = loanAccounts.Where(l => l.DueDate.HasValue && l.DueDate.Value >= tuNgayTao.Value);
+            }
+
+            if (denNgayTao.HasValue)
+            {
+                loanAccounts = loanAccounts.Where(l => l.DueDate.HasValue && l.DueDate.Value <= denNgayTao.Value);
+            }
+
+            // Tạo PDF
+            using (MemoryStream stream = new MemoryStream())
+            {
+                iTextSharp.text.Document document = new iTextSharp.text.Document(PageSize.A4.Rotate(), 20, 20, 20, 20); // Khổ ngang
+                PdfWriter writer = PdfWriter.GetInstance(document, stream);
+                document.Open();
+
+                // Font hỗ trợ tiếng Việt
+                string fontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "times.ttf");
+                BaseFont baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                iTextSharp.text.Font titleFont = new iTextSharp.text.Font(baseFont, 16, iTextSharp.text.Font.BOLD);
+                iTextSharp.text.Font textFont = new iTextSharp.text.Font(baseFont, 12, iTextSharp.text.Font.NORMAL);
+
+                // Tiêu đề
+                Paragraph title = new Paragraph("Báo cáo danh sách tài khoản vay", titleFont)
+                {
+                    Alignment = Element.ALIGN_CENTER,
+                    SpacingAfter = 20
+                };
+                document.Add(title);
+
+                // Tạo bảng
+                PdfPTable table = new PdfPTable(5) { WidthPercentage = 100 };
+                table.SetWidths(new float[] { 2f, 4f, 3f, 3f, 3f });
+
+                // Header
+                string[] headers = { "Mã khoản vay", "Tên khách hàng", "Số tiền vay", "Ngày đến hạn", "Tình trạng" };
+                foreach (var header in headers)
+                {
+                    PdfPCell cell = new PdfPCell(new Phrase(header, textFont))
+                    {
+                        BackgroundColor = BaseColor.LIGHT_GRAY,
+                        HorizontalAlignment = Element.ALIGN_CENTER
+                    };
+                    table.AddCell(cell);
+                }
+
+                // Dữ liệu
+                foreach (var item in loanAccounts.ToList())
+                {
+                    DateTime? dueDate = item.DueDate.HasValue ? item.DueDate.Value.ToDateTime(new TimeOnly(0, 0)) : null;
+                    var status = dueDate.HasValue
+                    ? (currentDate > item.DueDate.Value ? "Đã đến hạn" : "Chưa đến hạn")
+                    : "Chưa xác định";
+
+                    table.AddCell(new PdfPCell(new Phrase(item.LoanId, textFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.Customer?.FullName ?? "Không có dữ liệu", textFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.LoanAmount.ToString("N2"), textFont)) { HorizontalAlignment = Element.ALIGN_RIGHT });
+                    table.AddCell(new PdfPCell(new Phrase(dueDate?.ToString("dd/MM/yyyy") ?? "Chưa xác định", textFont)));
+                    table.AddCell(new PdfPCell(new Phrase(status, textFont)));
+                }
+
+                document.Add(table);
+                document.Close();
+
+                return File(stream.ToArray(), "application/pdf", "BaoCaoDanhSachTaiKhoanVay.pdf");
+            }
+        }
 
     }
 }

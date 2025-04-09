@@ -59,6 +59,7 @@ namespace DOAN.Controllers
             if (profile != null)
             {
                 profile.IsApproved = "Đã phê duyệt";
+                profile.ApprovedAt = DateTime.Now; // Ghi lại thời gian phê duyệt
                 _context.SaveChanges();
                 return Json(new { success = true, message = "Phê duyệt thành công!" });
             }
@@ -73,6 +74,7 @@ namespace DOAN.Controllers
             if (profile != null)
             {
                 profile.IsApproved = "Đã từ chối";
+                profile.RejectedAt = DateTime.Now; // Ghi lại thời gian từ chối
                 _context.SaveChanges();
                 return Json(new { success = true, message = "Đã từ chối hồ sơ!" });
             }
