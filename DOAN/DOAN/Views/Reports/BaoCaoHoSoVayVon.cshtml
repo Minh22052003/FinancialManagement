@@ -16,8 +16,8 @@
         <select class="form-select" name="trangThai">
             <option value="">-- Tất cả --</option>
             @{
-                var trangThaiOptions = new[] { "Đang chờ", "Đã phê duyệt", "Từ chối" };
-                var selected = ViewBag.Status as string;
+                var trangThaiOptions = new[] { "Chưa phê duyệt", "Đã phê duyệt", "Đã từ chối" };
+                var selected = ViewBag.TrangThai as string;
             }
 
             @foreach (var item in trangThaiOptions)
@@ -61,11 +61,11 @@
         <input type="date" class="form-control" name="denNgayTuChoi" value="@ViewBag.DenNgayTuChoi" />
     </div>
 
-    <div class="col-12 mt-2">
-        <button type="submit" class="btn btn-primary">Lọc</button>
-        <a class="btn btn-danger mt-2" href="@Url.Action("ExportToPdfHoSoVayVon", "Reports", new {
+    <div class="col-12 mt-3">
+        <button type="submit" class="btn btn-success">Lọc</button>
+        <a class="btn btn-primary" href="@Url.Action("ExportToPdfHoSoVayVon", "Reports", new {
             tenKhachHang = ViewBag.TenKhachHang,
-            trangThai = ViewBag.Status,
+            trangThai = ViewBag.TrangThai,
             tuNgayTao = ViewBag.TuNgayTao,
             denNgayTao = ViewBag.DenNgayTao,
             tuNgayPheDuyet = ViewBag.TuNgayPheDuyet,

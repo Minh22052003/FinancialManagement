@@ -13,7 +13,7 @@ public partial class LoanProfile
 
     public string CitizenId { get; set; } = null!;
 
-    public string IsApproved { get; set; } = null!;
+    public string? IsApproved { get; set; }
 
     public decimal LoanAmount { get; set; }
 

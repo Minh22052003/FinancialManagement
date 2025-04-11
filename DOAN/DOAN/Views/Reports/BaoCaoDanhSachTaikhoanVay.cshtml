@@ -57,13 +57,13 @@
     </div>
 
 
-    <div class="col-12 mt-2">
-        <button type="submit" class="btn btn-primary">Lọc</button>
-        <a asp-action="ExportToPdfDanhSachTaiKhoanVay"
-           asp-route-searchTerm="@ViewBag.SearchTerm"
-           asp-route-loanStatus="@ViewBag.LoanStatus"
-           asp-route-isFullyPaid="@ViewBag.IsFullyPaid"
-           class="btn btn-success">Xuất PDF</a>
+     <div class="col-12 mt-2">
+         <button type="submit" class="btn btn-primary">Lọc</button>
+         <a asp-action="ExportToPdfDanhSachTaiKhoanVay"
+         asp-route-searchTerm="@ViewBag.SearchTerm"
+         asp-route-loanStatus="@ViewBag.LoanStatus"
+         asp-route-isFullyPaid="@ViewBag.IsFullyPaid"
+            class="btn btn-success">Xuất PDF</a>
     </div>
 </form>
 
@@ -74,7 +74,8 @@
             <th>Tên khách hàng</th>
             <th>Số tiền vay</th>
             <th>Ngày đến hạn</th>
-            <th>Tình trạng</th>
+            <th>Tình trạng giải ngân</th>
+            <th>Tình trạng trả nợ </th>
         </tr>
     </thead>
     <tbody class="align-middle">
@@ -87,7 +88,8 @@
                 <td>@(item.Customer?.FullName ?? "Không có dữ liệu")</td>
                 <td>@item.LoanAmount.ToString("N2")</td>
                 <td>@(dueDate?.ToString("dd/MM/yyyy") ?? "Chưa xác định")</td>
-                <td>@status</td>
+                <td>@item.LoanStatus</td>
+                <td>@(item.IsFullyPaid ? "Trả hết" : "Chưa trả hết")</td>
             </tr>
         }
     </tbody>

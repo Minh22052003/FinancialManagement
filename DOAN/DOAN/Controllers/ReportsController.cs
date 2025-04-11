@@ -139,12 +139,7 @@ namespace DOAN.Controllers
 
             if (!string.IsNullOrEmpty(trangThai))
             {
-                if (trangThai == "Đã phê duyệt")
-                    query = query.Where(p => p.IsApproved == "true");
-                else if (trangThai == "Từ chối")
-                    query = query.Where(p => p.IsApproved == "false");
-                else if (trangThai == "Đang chờ")
-                    query = query.Where(p => string.IsNullOrEmpty(p.IsApproved) || (p.IsApproved != "true" && p.IsApproved != "false"));
+                query = query.Where(p => p.IsApproved == trangThai);
             }
 
             if (tuNgayTao.HasValue)
@@ -229,15 +224,16 @@ namespace DOAN.Controllers
 
             using (MemoryStream stream = new MemoryStream())
             {
-                iTextSharp.text.Document document = new iTextSharp.text.Document(PageSize.A4);
+                iTextSharp.text.Document document = new iTextSharp.text.Document(PageSize.A4.Rotate());
                 PdfWriter writer = PdfWriter.GetInstance(document, stream);
                 document.Open();
 
                 string fontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "times.ttf");
                 BaseFont baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
                 iTextSharp.text.Font titleFont = new iTextSharp.text.Font(baseFont, 16, iTextSharp.text.Font.BOLD);
-                iTextSharp.text.Font textFont = new iTextSharp.text.Font(baseFont, 12, iTextSharp.text.Font.NORMAL);
+                iTextSharp.text.Font textFont = new iTextSharp.text.Font(baseFont, 11, iTextSharp.text.Font.NORMAL);
 
+                // Tiêu đề
                 Paragraph title = new Paragraph("Báo cáo danh sách tài khoản tiền gửi", titleFont)
                 {
                     Alignment = Element.ALIGN_CENTER,
@@ -245,22 +241,32 @@ namespace DOAN.Controllers
                 };
                 document.Add(title);
 
-                PdfPTable table = new PdfPTable(3) { WidthPercentage = 100 };
-                table.SetWidths(new float[] { 2f, 5f, 3f });
+                // Bảng
+                PdfPTable table = new PdfPTable(6) { WidthPercentage = 100 };
+                table.SetWidths(new float[] { 1.5f, 4f, 5f, 3f, 3.5f, 3f });
 
-                table.AddCell(new PdfPCell(new Phrase("Mã tài khoản", textFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
-                table.AddCell(new PdfPCell(new Phrase("Tên khách hàng", textFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
-                table.AddCell(new PdfPCell(new Phrase("Số dư", textFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
+                // Header
+                string[] headers = { "STT", "Mã tài khoản", "Tên khách hàng", "Ngày mở", "Loại tài khoản", "Số dư hiện tại" };
+                foreach (var header in headers)
+                {
+                    table.AddCell(new PdfPCell(new Phrase(header, textFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
+                }
 
+                int stt = 1;
                 foreach (var item in accounts)
                 {
-                    table.AddCell(new Phrase(item.AccountNumber, textFont));
+                    table.AddCell(new Phrase(stt.ToString(), textFont));
+                    table.AddCell(new Phrase(item.AccountNumber ?? "", textFont));
                     table.AddCell(new Phrase(item.Customer?.FullName ?? "Không có dữ liệu", textFont));
+                    table.AddCell(new Phrase(((DateTime)item.CreatedAt).ToString("dd/MM/yyyy"), textFont));
+                    table.AddCell(new Phrase(string.IsNullOrEmpty(item.AccountType) ? "Không có dữ liệu" : item.AccountType, textFont));
                     table.AddCell(new Phrase(item.Balance.ToString("N2"), textFont));
+                    stt++;
                 }
 
                 document.Add(table);
                 document.Close();
+
                 return File(stream.ToArray(), "application/pdf", "BaoCaoTaiKhoanTienGui.pdf");
             }
         }
@@ -383,6 +389,10 @@ namespace DOAN.Controllers
             if (!string.IsNullOrEmpty(tenKhachHang))
                 query = query.Where(p => p.CustomerName.Contains(tenKhachHang));
 
+            if (!string.IsNullOrEmpty(trangThai))
+            {
+                query = query.Where(p => p.IsApproved == trangThai);
+            }
 
             if (tuNgayTao.HasValue)
                 query = query.Where(p => p.CreatedAt.Date >= tuNgayTao.Value.Date);
@@ -429,7 +439,7 @@ namespace DOAN.Controllers
                 table.SetWidths(new float[] { 2f, 4f, 3f, 3f, 3f, 3f, 3f, 3f });
 
                 // Header
-                string[] headers = { "Mã hồ sơ", "Tên KH", "Mã KH", "Số tiền vay", "Ngày tạo", "Ngày phê duyệt", "Ngày từ chối", "Trạng thái" };
+                string[] headers = { "Mã hồ sơ", "Tên KH", "Mã KH", "Ghi chú hồ sơ", "Ngày tạo", "Ngày phê duyệt", "Ngày từ chối", "Trạng thái" };
                 foreach (var header in headers)
                 {
                     PdfPCell cell = new PdfPCell(new Phrase(header, textFont))
@@ -446,11 +456,11 @@ namespace DOAN.Controllers
                     table.AddCell(new PdfPCell(new Phrase(item.ProfileId, textFont)));
                     table.AddCell(new PdfPCell(new Phrase(item.CustomerName, textFont)));
                     table.AddCell(new PdfPCell(new Phrase(item.CitizenId, textFont)));
-                    table.AddCell(new PdfPCell(new Phrase(item.LoanAmount.ToString("N0"), textFont)) { HorizontalAlignment = Element.ALIGN_RIGHT });
+                    table.AddCell(new PdfPCell(new Phrase(item.Notes, textFont)));
                     table.AddCell(new PdfPCell(new Phrase(item.CreatedAt.ToString("dd/MM/yyyy"), textFont)));
                     table.AddCell(new PdfPCell(new Phrase(item.ApprovedAt?.ToString("dd/MM/yyyy") ?? "-", textFont)));
                     table.AddCell(new PdfPCell(new Phrase(item.RejectedAt?.ToString("dd/MM/yyyy") ?? "-", textFont)));
-                    table.AddCell(new PdfPCell(new Phrase(item.Notes, textFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.IsApproved, textFont)));
                 }
 
                 document.Add(table);
@@ -531,7 +541,7 @@ namespace DOAN.Controllers
             string fileName = $"BaoCaoHoSoVayVon_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
             return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
-        public IActionResult ExportToPdfDanhSachTaiKhoanVay(string? searchTerm, string? loanStatus, DateOnly? tuNgayTao, DateOnly? denNgayTao)
+        public IActionResult ExportToPdfDanhSachTaiKhoanVay(string? searchTerm, string? loanStatus, DateOnly? tuNgayTao, DateOnly? denNgayTao, bool? isFullyPaid)
         {
             var loanAccounts = _context.LoanAccounts.Include(l => l.Customer).AsQueryable();
             var currentDate = DateOnly.FromDateTime(DateTime.Now);
@@ -548,6 +558,12 @@ namespace DOAN.Controllers
             if (!string.IsNullOrEmpty(loanStatus))
             {
                 loanAccounts = loanAccounts.Where(l => l.LoanStatus == loanStatus);
+            }
+
+            // Lọc theo tình trạng trả nợ
+            if (isFullyPaid.HasValue)
+            {
+                loanAccounts = loanAccounts.Where(l => l.IsFullyPaid == isFullyPaid.Value);
             }
 
             // Lọc theo khoảng thời gian DueDate
@@ -583,11 +599,11 @@ namespace DOAN.Controllers
                 document.Add(title);
 
                 // Tạo bảng
-                PdfPTable table = new PdfPTable(5) { WidthPercentage = 100 };
-                table.SetWidths(new float[] { 2f, 4f, 3f, 3f, 3f });
+                PdfPTable table = new PdfPTable(6) { WidthPercentage = 100 }; // Thêm cột cho tình trạng trả nợ
+                table.SetWidths(new float[] { 2f, 4f, 3f, 3f, 3f, 3f });
 
                 // Header
-                string[] headers = { "Mã khoản vay", "Tên khách hàng", "Số tiền vay", "Ngày đến hạn", "Tình trạng" };
+                string[] headers = { "Mã khoản vay", "Tên khách hàng", "Số tiền vay", "Ngày đến hạn", "Tình trạng giải ngân", "Tình trạng trả nợ" };
                 foreach (var header in headers)
                 {
                     PdfPCell cell = new PdfPCell(new Phrase(header, textFont))
@@ -603,14 +619,15 @@ namespace DOAN.Controllers
                 {
                     DateTime? dueDate = item.DueDate.HasValue ? item.DueDate.Value.ToDateTime(new TimeOnly(0, 0)) : null;
                     var status = dueDate.HasValue
-                    ? (currentDate > item.DueDate.Value ? "Đã đến hạn" : "Chưa đến hạn")
-                    : "Chưa xác định";
+                        ? (currentDate > item.DueDate.Value ? "Đã đến hạn" : "Chưa đến hạn")
+                        : "Chưa xác định";
 
                     table.AddCell(new PdfPCell(new Phrase(item.LoanId, textFont)));
                     table.AddCell(new PdfPCell(new Phrase(item.Customer?.FullName ?? "Không có dữ liệu", textFont)));
                     table.AddCell(new PdfPCell(new Phrase(item.LoanAmount.ToString("N2"), textFont)) { HorizontalAlignment = Element.ALIGN_RIGHT });
                     table.AddCell(new PdfPCell(new Phrase(dueDate?.ToString("dd/MM/yyyy") ?? "Chưa xác định", textFont)));
-                    table.AddCell(new PdfPCell(new Phrase(status, textFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.LoanStatus, textFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.IsFullyPaid ? "Trả hết" : "Chưa trả hết", textFont))); // Thêm cột tình trạng trả nợ
                 }
 
                 document.Add(table);
